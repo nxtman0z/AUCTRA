@@ -1,0 +1,254 @@
+/* Auction Card Styles */
+
+.auction-card {
+  border-radius: 15px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.auction-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: #007bff;
+}
+
+/* Image Container */
+.card-img-container {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.card-img-top {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.auction-card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+.card-img-overlay-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+/* Card Body */
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.75rem;
+  height: 1.5rem;
+  overflow: hidden;
+}
+
+.card-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  min-height: 2.8rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Auction Details */
+.auction-details {
+  background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.auction-details .fw-bold {
+  font-size: 1.1rem;
+}
+
+/* Seller Info */
+.seller-info {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 0.75rem;
+  border-left: 3px solid #007bff;
+}
+
+.seller-info .text-truncate {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+/* Actions */
+.card-actions .btn {
+  border-radius: 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.card-actions .btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+}
+
+.btn-success {
+  background: linear-gradient(45deg, #28a745, #1e7e34);
+  border: none;
+}
+
+.btn-outline-primary {
+  border: 2px solid #007bff;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.btn-outline-primary:hover {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border-color: #007bff;
+  color: white;
+}
+
+/* Footer */
+.card-footer {
+  border-top: 1px solid rgba(0,0,0,0.1);
+  background: linear-gradient(45deg, #f8f9fa, #ffffff) !important;
+  padding: 0.75rem 1.5rem;
+}
+
+/* Status Badges */
+.badge {
+  font-size: 0.7rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 15px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+  background: linear-gradient(45deg, #28a745, #20c997) !important;
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+}
+
+.badge.bg-danger {
+  background: linear-gradient(45deg, #dc3545, #c82333) !important;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.badge.bg-secondary {
+  background: linear-gradient(45deg, #6c757d, #545b62) !important;
+  box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+/* Time indicators */
+.text-warning {
+  color: #fd7e14 !important;
+}
+
+.text-danger {
+  color: #dc3545 !important;
+}
+
+.text-primary {
+  color: #007bff !important;
+}
+
+/* Loading state */
+.auction-card .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .auction-details {
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+  }
+  
+  .seller-info {
+    padding: 0.5rem;
+  }
+  
+  .card-footer {
+    padding: 0.5rem 1rem;
+  }
+  
+  .card-title {
+    font-size: 1rem;
+  }
+  
+  .card-actions .btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* Animation classes */
+.auction-card-enter {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+}
+
+.auction-card-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.auction-card-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.auction-card-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for interactive elements */
+.card-title:hover {
+  color: #007bff;
+  cursor: pointer;
+}
+
+.seller-info:hover {
+  background-color: #e9ecef;
+  border-left-color: #28a745;
+  transition: all 0.3s ease;
+}
+
+/* Special effects */
+.auction-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #28a745, #ffc107, #dc3545);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auction-card:hover::before {
+  opacity: 1;
+}
