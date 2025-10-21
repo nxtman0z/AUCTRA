@@ -43,12 +43,24 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
+      // Basic validation
+      if (!userForm.email || !userForm.password) {
+        setError('Please fill in all fields');
+        return;
+      }
+
       if (!isConnected) {
         setError('Please connect your wallet first');
         return;
       }
+
+      console.log('🔐 Attempting user login with:', {
+        email: userForm.email,
+        walletAddress: account
+      });
 
       const result = await loginUser(userForm.email, userForm.password, account);
       
@@ -58,10 +70,11 @@ const LoginPage = () => {
           navigate('/dashboard');
         }, 1500);
       } else {
-        setError(result.error);
+        setError(result.error || 'Login failed');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      console.error('User login error:', err);
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -71,12 +84,21 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
+      // Basic validation
+      if (!adminForm.adminKey) {
+        setError('Please enter admin key');
+        return;
+      }
+
       if (!isConnected) {
         setError('Please connect your wallet first');
         return;
       }
+
+      console.log('👑 Attempting admin login...');
 
       const result = await loginAdmin(adminForm.adminKey, account);
       
@@ -86,10 +108,11 @@ const LoginPage = () => {
           navigate('/admin');
         }, 1500);
       } else {
-        setError(result.error);
+        setError(result.error || 'Admin login failed');
       }
     } catch (err) {
-      setError('Admin login failed. Please try again.');
+      console.error('Admin login error:', err);
+      setError(err.message || 'Admin login failed. Please try again.');
     } finally {
       setLoading(false);
     }

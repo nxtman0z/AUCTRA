@@ -34,8 +34,47 @@ const SignupPage = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
+      // Comprehensive validation
+      if (!form.fullName || !form.email || !form.password || !form.confirmPassword) {
+        setError('Please fill in all fields');
+        return;
+      }
+
+      if (form.password !== form.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      if (form.password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return;
+      }
+
+      // Check password strength
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+      if (!passwordRegex.test(form.password)) {
+        setError('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character (@$!%*?&)');
+        return;
+      }
+
+      // Check email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        setError('Please enter a valid email address');
+        return;
+      }
+
+      // Check for Gmail, Yahoo, Outlook, etc.
+      const allowedDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];
+      const emailDomain = form.email.split('@')[1]?.toLowerCase();
+      if (!allowedDomains.includes(emailDomain)) {
+        setError('Please use a valid email from Gmail, Yahoo, Outlook, Hotmail, or iCloud');
+        return;
+      }
+
       if (!isConnected) {
         setError('Please connect your wallet first');
         return;
@@ -46,21 +85,35 @@ const SignupPage = () => {
         return;
       }
 
-      const result = await signupUser({
-        ...form,
+      console.log('📝 Attempting user signup with:', {
+        username: form.fullName.replace(/\s+/g, '_').toLowerCase(),
+        email: form.email,
         walletAddress: account
       });
+
+      // Prepare signup data
+      const signupData = {
+        username: form.fullName.replace(/\s+/g, '_').toLowerCase(), // Convert fullName to username
+        email: form.email,
+        password: form.password,
+        confirmPassword: form.confirmPassword,
+        walletAddress: account,
+        terms: form.agreeTerms
+      };
+
+      const result = await signupUser(signupData);
       
       if (result.success) {
-        setSuccess(result.message);
+        setSuccess('Registration successful! Welcome to Auctra! Redirecting to login...');
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(result.error);
+        setError(result.error || 'Registration failed');
       }
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error('Signup error:', err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }

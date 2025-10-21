@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiService from '../services/apiService';
 
 const AuthContext = createContext();
 
@@ -12,56 +13,61 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Admin key for admin login (in production, this would be more secure)
-  const ADMIN_KEY = "AUCTRA_ADMIN_2024";
+  const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Check for existing session on load
   useEffect(() => {
-    const storedUser = localStorage.getItem('auctra_user');
-    if (storedUser) {
-      try {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (token && storedUser) {
         const userData = JSON.parse(storedUser);
         setUser(userData);
         setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('auctra_user');
+        
+        // Verify token is still valid
+        try {
+          await apiService.getCurrentUser();
+        } catch (error) {
+          console.error('Token validation failed:', error);
+          logout();
+        }
       }
+    } catch (error) {
+      console.error('Error checking auth status:', error);
+      logout();
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  };
 
   // Admin login with admin key
   const loginAdmin = async (adminKey, walletAddress) => {
     try {
       setLoading(true);
-      
-      if (adminKey !== ADMIN_KEY) {
-        throw new Error('Invalid admin key');
+      setError(null);
+
+      console.log('🔐 Attempting admin login...');
+      const response = await apiService.adminLogin({ adminKey, walletAddress });
+
+      if (response.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        console.log('✅ Admin login successful');
+        return { success: true, user: response.data.user };
+      } else {
+        throw new Error(response.message || 'Admin login failed');
       }
-
-      if (!walletAddress) {
-        throw new Error('Wallet address is required');
-      }
-
-      const adminUser = {
-        id: 'admin_' + Date.now(),
-        walletAddress: walletAddress,
-        role: 'admin',
-        email: 'admin@auctra.com',
-        isVerified: true,
-        loginTime: new Date().toISOString()
-      };
-
-      setUser(adminUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('auctra_user', JSON.stringify(adminUser));
-      
-      return { success: true, user: adminUser };
     } catch (error) {
+      console.error('❌ Admin login error:', error);
+      setError(error.message);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -72,33 +78,26 @@ export const AuthProvider = ({ children }) => {
   const loginUser = async (email, password, walletAddress) => {
     try {
       setLoading(true);
-      
-      // Basic validation
-      if (!email || !password) {
-        throw new Error('Email and password are required');
+      setError(null);
+
+      console.log('🔐 Attempting user login...');
+      const response = await apiService.login({ 
+        login: email, 
+        password, 
+        walletAddress 
+      });
+
+      if (response.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        console.log('✅ User login successful');
+        return { success: true, user: response.data.user };
+      } else {
+        throw new Error(response.message || 'Login failed');
       }
-
-      if (!walletAddress) {
-        throw new Error('Please connect your wallet first');
-      }
-
-      // In a real app, this would validate against backend
-      // For now, we'll create a mock user
-      const regularUser = {
-        id: 'user_' + Date.now(),
-        email: email,
-        walletAddress: walletAddress,
-        role: 'user',
-        isVerified: true,
-        loginTime: new Date().toISOString()
-      };
-
-      setUser(regularUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('auctra_user', JSON.stringify(regularUser));
-      
-      return { success: true, user: regularUser };
     } catch (error) {
+      console.error('❌ User login error:', error);
+      setError(error.message);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -109,38 +108,22 @@ export const AuthProvider = ({ children }) => {
   const signupUser = async (userData) => {
     try {
       setLoading(true);
-      
-      const { email, password, confirmPassword, walletAddress } = userData;
+      setError(null);
 
-      // Basic validation
-      if (!email || !password || !confirmPassword) {
-        throw new Error('All fields are required');
+      console.log('📝 Attempting user signup...');
+      const response = await apiService.signup(userData);
+
+      if (response.success) {
+        setUser(response.data.user);
+        setIsAuthenticated(true);
+        console.log('✅ User signup successful');
+        return { success: true, user: response.data.user };
+      } else {
+        throw new Error(response.message || 'Signup failed');
       }
-
-      if (password !== confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-
-      if (password.length < 6) {
-        throw new Error('Password must be at least 6 characters');
-      }
-
-      if (!walletAddress) {
-        throw new Error('Please connect your wallet first');
-      }
-
-      // In a real app, this would register with backend
-      const newUser = {
-        id: 'user_' + Date.now(),
-        email: email,
-        walletAddress: walletAddress,
-        role: 'user',
-        isVerified: false, // Would be verified via email
-        signupTime: new Date().toISOString()
-      };
-
-      return { success: true, message: 'Registration successful! Please contact admin for verification.' };
     } catch (error) {
+      console.error('❌ User signup error:', error);
+      setError(error.message);
       return { success: false, error: error.message };
     } finally {
       setLoading(false);
@@ -148,10 +131,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Logout
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('auctra_user');
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await apiService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(null);
+      setLoading(false);
+    }
   };
 
   // Check if user is admin
@@ -159,22 +150,29 @@ export const AuthProvider = ({ children }) => {
     return user && user.role === 'admin';
   };
 
-  // Check if user is verified
+  // Check if user is verified/active
   const isVerified = () => {
-    return user && user.isVerified;
+    return user && user.isActive !== false;
+  };
+
+  // Clear error
+  const clearError = () => {
+    setError(null);
   };
 
   const value = {
     user,
     isAuthenticated,
     loading,
+    error,
     loginAdmin,
     loginUser,
     signupUser,
     logout,
     isAdmin,
     isVerified,
-    ADMIN_KEY // For display purposes only
+    clearError,
+    ADMIN_KEY: "AUCTRA_ADMIN_2024" // For display purposes only
   };
 
   return (
