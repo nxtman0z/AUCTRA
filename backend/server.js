@@ -5,9 +5,16 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const colors = require('colors');
+const path = require('path');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from the correct path
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Debug: Check if environment variables are loaded
+console.log('🔧 Environment check:');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Loaded ✅' : 'Missing ❌');
+console.log('PORT:', process.env.PORT || 'Missing ❌');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'Missing ❌');
 
 // Import database connection
 const connectDB = require('./config/database');
@@ -15,7 +22,6 @@ const connectDB = require('./config/database');
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
-const auctionRoutes = require('./routes/auctions');
 const aiRoutes = require('./routes/ai');
 
 // Connect to database
@@ -65,7 +71,6 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/auctions', auctionRoutes);
 app.use('/api/ai', aiRoutes);
 
 // Root endpoint

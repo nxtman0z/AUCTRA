@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useWeb3 } from '../context/Web3Context';
 import './SignupPage.css';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const { signupUser } = useAuth();
-  const { connectWallet, account, isConnected } = useWeb3();
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -75,10 +73,7 @@ const SignupPage = () => {
         return;
       }
 
-      if (!isConnected) {
-        setError('Please connect your wallet first');
-        return;
-      }
+
 
       if (!form.agreeTerms) {
         setError('Please accept the Terms of Service and Privacy Policy');
@@ -87,8 +82,7 @@ const SignupPage = () => {
 
       console.log('📝 Attempting user signup with:', {
         username: form.fullName.replace(/\s+/g, '_').toLowerCase(),
-        email: form.email,
-        walletAddress: account
+        email: form.email
       });
 
       // Prepare signup data
@@ -97,7 +91,6 @@ const SignupPage = () => {
         email: form.email,
         password: form.password,
         confirmPassword: form.confirmPassword,
-        walletAddress: account,
         terms: form.agreeTerms
       };
 
@@ -119,75 +112,36 @@ const SignupPage = () => {
     }
   };
 
-  const handleWalletConnect = async () => {
-    try {
-      setError('');
-      await connectWallet();
-      setSuccess('Wallet connected successfully!');
-    } catch (err) {
-      setError('Failed to connect wallet. Please try again.');
-    }
-  };
-
   return (
     <div className="signup-page">
       <div className="signup-container">
         {/* Header */}
         <div className="signup-header">
           <Link to="/" className="brand-link">
-            <img src="/auctra-logo.png" alt="Auctra" className="signup-logo" />
             <span className="brand-name">Auctra</span>
           </Link>
           <h2 className="signup-title">Join the Revolution</h2>
           <p className="signup-subtitle">Create your account and start bidding on exclusive auctions</p>
         </div>
 
-        {/* Wallet Connection Status */}
-        <div className="wallet-status">
-          {!isConnected ? (
-            <div className="wallet-connect">
-              <div className="alert alert-info">
-                <i className="fas fa-info-circle me-2"></i>
-                Connect your Web3 wallet to get started
-              </div>
-              <button 
-                className="btn btn-outline-primary btn-lg w-100"
-                onClick={handleWalletConnect}
-                disabled={loading}
-              >
-                <i className="fas fa-wallet me-2"></i>
-                Connect Wallet
-              </button>
-            </div>
-          ) : (
-            <div className="wallet-connected">
-              <div className="alert alert-success">
-                <i className="fas fa-check-circle me-2"></i>
-                Wallet Connected: {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
-              </div>
+        {/* Signup Form */}
+        <div className="signup-form-container">
+          {/* Messages */}
+          {error && (
+            <div className="alert alert-danger">
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              {error}
             </div>
           )}
-        </div>
+          
+          {success && (
+            <div className="alert alert-success">
+              <i className="fas fa-check-circle me-2"></i>
+              {success}
+            </div>
+          )}
 
-        {/* Signup Form */}
-        {isConnected && (
-          <div className="signup-form-container">
-            {/* Messages */}
-            {error && (
-              <div className="alert alert-danger">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                {error}
-              </div>
-            )}
-            
-            {success && (
-              <div className="alert alert-success">
-                <i className="fas fa-check-circle me-2"></i>
-                {success}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="signup-form">
+          <form onSubmit={handleSubmit} className="signup-form">
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="fullName" className="form-label">
@@ -268,16 +222,7 @@ const SignupPage = () => {
                 </div>
               </div>
 
-              {/* Connected Wallet Info */}
-              <div className="wallet-info">
-                <div className="info-card">
-                  <i className="fas fa-wallet text-primary me-2"></i>
-                  <div>
-                    <strong>Connected Wallet:</strong><br />
-                    <small className="text-muted">{account}</small>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Terms & Conditions */}
               <div className="form-check-container">
@@ -326,17 +271,6 @@ const SignupPage = () => {
               </Link>
             </div>
           </div>
-        )}
-
-        {/* Important Note */}
-        <div className="signup-note">
-          <div className="note-card">
-            <i className="fas fa-info-circle text-warning me-2"></i>
-            <div>
-              <strong>Important:</strong> After registration, please contact an administrator to verify your account before you can create auctions.
-            </div>
-          </div>
-        </div>
 
         {/* Back to Home */}
         <div className="back-home">

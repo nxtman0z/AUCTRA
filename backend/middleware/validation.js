@@ -46,6 +46,7 @@ exports.validateSignup = [
     }),
     
   body('walletAddress')
+    .optional()
     .matches(/^0x[a-fA-F0-9]{40}$/)
     .withMessage('Please provide a valid Ethereum wallet address'),
     
@@ -73,12 +74,7 @@ exports.validateLogin = [
     .notEmpty()
     .withMessage('Password is required')
     .isLength({ min: 6, max: 50 })
-    .withMessage('Password must be between 6 and 50 characters'),
-    
-  body('walletAddress')
-    .optional()
-    .matches(/^0x[a-fA-F0-9]{40}$/)
-    .withMessage('Please provide a valid Ethereum wallet address')
+    .withMessage('Password must be between 6 and 50 characters')
 ];
 
 // Admin login validation
@@ -88,12 +84,7 @@ exports.validateAdminLogin = [
     .notEmpty()
     .withMessage('Admin key is required')
     .isLength({ min: 10 })
-    .withMessage('Invalid admin key format'),
-    
-  body('walletAddress')
-    .optional()
-    .matches(/^0x[a-fA-F0-9]{40}$/)
-    .withMessage('Please provide a valid Ethereum wallet address')
+    .withMessage('Invalid admin key format')
 ];
 
 // Profile update validation

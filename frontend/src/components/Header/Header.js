@@ -1,28 +1,16 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useWeb3 } from '../../context/Web3Context';
 import { useAuth } from '../../context/AuthContext';
+import WalletConnection from '../WalletConnection';
 import './Header.css';
 
 const Header = () => {
-  const { 
-    account, 
-    isConnected, 
-    disconnectWallet 
-  } = useWeb3();
-  
   const { user, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    disconnectWallet();
     navigate('/');
-  };
-
-  const formatAddress = (address) => {
-    if (!address) return '';
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
   return (
@@ -30,7 +18,7 @@ const Header = () => {
       <div className="container">
         <Link className="navbar-brand fw-bold d-flex align-items-center" to="/dashboard">
           <img 
-            src="/auctra-logo.png" 
+            src="/auctra_logo.png" 
             alt="Auctra" 
             height="40" 
             className="me-2"
@@ -56,12 +44,6 @@ const Header = () => {
             {isAdmin() && (
               <>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/admin">
-                    <i className="fas fa-tachometer-alt me-2"></i>
-                    Admin Dashboard
-                  </Link>
-                </li>
-                <li className="nav-item">
                   <Link className="nav-link" to="/admin/users">
                     <i className="fas fa-users me-2"></i>
                     User Management
@@ -73,24 +55,12 @@ const Header = () => {
                     All Auctions
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/admin/analytics">
-                    <i className="fas fa-chart-bar me-2"></i>
-                    Analytics
-                  </Link>
-                </li>
               </>
             )}
 
             {/* Regular User Navigation */}
             {user && !isAdmin() && (
               <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/dashboard">
-                    <i className="fas fa-home me-2"></i>
-                    Dashboard
-                  </Link>
-                </li>
                 <li className="nav-item">
                   <Link className="nav-link" to="/auctions">
                     <i className="fas fa-search me-2"></i>
@@ -107,12 +77,6 @@ const Header = () => {
                   <Link className="nav-link" to="/my-auctions">
                     <i className="fas fa-list me-2"></i>
                     My Auctions
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/profile">
-                    <i className="fas fa-user me-2"></i>
-                    Profile
                   </Link>
                 </li>
               </>
@@ -143,32 +107,104 @@ const Header = () => {
             )}
           </ul>
           
-          <div className="d-flex align-items-center">
+          <div className="d-flex align-items-center gap-3">
             {user ? (
-              <div className="d-flex align-items-center">
-                <div className="me-3">
-                  <div className="text-light small">
-                    <div>� {user.email || user.username}</div>
-                    <div>
-                      {isAdmin && (
-                        <span className="badge bg-warning me-1">Admin</span>
-                      )}
-                      {isConnected && (
-                        <>
-                          <span className="badge bg-success me-1">Connected</span>
-                          <span className="badge bg-info">{formatAddress(account)}</span>
-                        </>
-                      )}
-                    </div>
+              <>
+                {/* Wallet Connection Component */}
+                <WalletConnection />
+                
+                {/* Admin Profile Dropdown */}
+                {isAdmin() && (
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-warning dropdown-toggle d-flex align-items-center"
+                      type="button"
+                      id="adminDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <i className="fas fa-user-shield me-2"></i>
+                      Admin
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
+                      <li>
+                        <div className="dropdown-header">
+                          <strong>Admin Account</strong>
+                        </div>
+                      </li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li>
+                        <span className="dropdown-item-text">
+                          <i className="fas fa-envelope me-2"></i>
+                          {user.email || 'admin@auctra.com'}
+                        </span>
+                      </li>
+                      <li>
+                        <span className="dropdown-item-text">
+                          <i className="fas fa-id-badge me-2"></i>
+                          Role: Administrator
+                        </span>
+                      </li>
+                      <li>
+                        <span className="dropdown-item-text">
+                          <i className="fas fa-shield-alt me-2"></i>
+                          Access Level: Full
+                        </span>
+                      </li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li>
+                        <button className="dropdown-item text-danger" onClick={handleLogout}>
+                          <i className="fas fa-sign-out-alt me-2"></i>
+                          Logout
+                        </button>
+                      </li>
+                    </ul>
                   </div>
-                </div>
-                <button
-                  className="btn btn-outline-light btn-sm"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
+                )}
+                
+                {/* Regular User Profile Dropdown */}
+                {!isAdmin() && (
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-light dropdown-toggle d-flex align-items-center"
+                      type="button"
+                      id="userDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                    >
+                      <i className="fas fa-user-circle me-2"></i>
+                      Profile
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                      <li>
+                        <div className="dropdown-header">
+                          <strong>{user.username || 'User'}</strong>
+                        </div>
+                      </li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li>
+                        <Link className="dropdown-item" to="/profile">
+                          <i className="fas fa-user me-2"></i>
+                          My Profile
+                        </Link>
+                      </li>
+                      <li>
+                        <Link className="dropdown-item" to="/profile/kyc">
+                          <i className="fas fa-id-card me-2"></i>
+                          KYC Verification
+                        </Link>
+                      </li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li>
+                        <button className="dropdown-item text-danger" onClick={handleLogout}>
+                          <i className="fas fa-sign-out-alt me-2"></i>
+                          Logout
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="d-flex gap-2">
                 <Link to="/login" className="btn btn-outline-light btn-sm">

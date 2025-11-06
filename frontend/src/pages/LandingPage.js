@@ -9,7 +9,7 @@ const LandingPage = () => {
       <nav className="navbar navbar-expand-lg navbar-dark fixed-top">
         <div className="container">
           <Link className="navbar-brand d-flex align-items-center" to="/">
-            <img src="/auctra-logo.png" alt="Auctra" className="navbar-logo me-3" />
+            <img src="/auctra_logo.png" alt="Auctra" className="navbar-logo me-3" />
             <span className="brand-name">Auctra</span>
           </Link>
           <button 
@@ -222,7 +222,7 @@ const LandingPage = () => {
             </div>
             <div className="col-lg-6">
               <div className="about-image">
-                <img src="/auctra-logo.png" alt="Auctra Platform" className="img-fluid rounded shadow" />
+                <img src="/auctra_logo.png" alt="Auctra Platform" className="img-fluid rounded shadow" />
               </div>
             </div>
           </div>
@@ -294,7 +294,7 @@ const LandingPage = () => {
           <div className="row align-items-center">
             <div className="col-md-6">
               <div className="d-flex align-items-center">
-                <img src="/auctra-logo.png" alt="Auctra" className="footer-logo me-3" />
+                <img src="/auctra_logo.png" alt="Auctra" className="footer-logo me-3" />
                 <span className="brand-name">Auctra</span>
               </div>
               <p className="mt-2 mb-0">The future of decentralized auctions.</p>

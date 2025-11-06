@@ -84,7 +84,7 @@ exports.signup = async (req, res) => {
       $or: [
         { email: email.toLowerCase() },
         { username },
-        { walletAddress }
+        ...(walletAddress ? [{ walletAddress }] : [])
       ]
     });
 
@@ -92,7 +92,7 @@ exports.signup = async (req, res) => {
       let message = 'User already exists';
       if (existingUser.email === email.toLowerCase()) message = 'Email already registered';
       if (existingUser.username === username) message = 'Username already taken';
-      if (existingUser.walletAddress === walletAddress) message = 'Wallet address already registered';
+      if (walletAddress && existingUser.walletAddress === walletAddress) message = 'Wallet address already registered';
       
       return res.status(409).json({
         success: false,
@@ -101,12 +101,18 @@ exports.signup = async (req, res) => {
     }
 
     // Create new user
-    const newUser = await User.create({
+    const userData = {
       username,
       email: email.toLowerCase(),
-      password,
-      walletAddress
-    });
+      password
+    };
+    
+    // Add wallet address only if provided
+    if (walletAddress) {
+      userData.walletAddress = walletAddress;
+    }
+    
+    const newUser = await User.create(userData);
 
     // Update last login
     await newUser.updateLastLogin();
@@ -148,7 +154,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    const { login, password, walletAddress } = req.body;
+    const { login, password } = req.body;
 
     // 1) Check if login and password exist
     if (!login || !password) {
@@ -176,18 +182,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // 4) Check wallet address if provided
-    if (walletAddress && user.walletAddress !== walletAddress) {
-      return res.status(400).json({
-        success: false,
-        message: 'Wallet address does not match your registered wallet'
-      });
-    }
-
-    // 5) Update last login
+    // 4) Update last login
     await user.updateLastLogin();
 
-    // 6) If everything ok, send token to client
+    // 5) If everything ok, send token to client
     createSendToken(user, 200, res, 'Login successful');
 
   } catch (error) {
@@ -205,7 +203,7 @@ exports.login = async (req, res) => {
 // @access  Public
 exports.adminLogin = async (req, res) => {
   try {
-    const { adminKey, walletAddress } = req.body;
+    const { adminKey } = req.body;
 
     // Check if admin key is provided
     if (!adminKey) {
@@ -232,17 +230,12 @@ exports.adminLogin = async (req, res) => {
         username: 'admin',
         email: 'admin@auctra.com',
         password: adminKey, // Using admin key as password
-        walletAddress: walletAddress || '0x0000000000000000000000000000000000000000',
         role: 'admin',
         profile: {
           firstName: 'AUCTRA',
           lastName: 'Admin'
         }
       });
-    } else if (walletAddress) {
-      // Update wallet address if provided
-      adminUser.walletAddress = walletAddress;
-      await adminUser.save();
     }
 
     // Update last login

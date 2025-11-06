@@ -22,6 +22,8 @@ import MyAuctions from './pages/MyAuctions';
 import AdminPanel from './pages/AdminPanel';
 import UserDashboard from './pages/UserDashboard/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
+import UserProfile from './pages/Profile/UserProfile';
+import KYCVerification from './pages/Profile/KYCVerification';
 
 // Import Global CSS
 import './App.css';
@@ -107,7 +109,15 @@ function App() {
                 <div>
                   <Header />
                   <main className="main-content">
-                    <UserDashboard />
+                    <UserProfile />
+                  </main>
+                </div>
+              } />
+              <Route path="/profile/kyc" element={
+                <div>
+                  <Header />
+                  <main className="main-content">
+                    <KYCVerification />
                   </main>
                 </div>
               } />

@@ -8,24 +8,23 @@ const AllAuctions = () => {
     getAllActiveAuctions, 
     getAuctionDetails,
     isConnected,
-    contract,
-    error,
-    setError 
+    contract
   } = useWeb3();
   
   const [auctions, setAuctions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const fetchAllAuctions = async () => {
     if (!contract) {
-      setError('Please connect your wallet first');
+      setErrorMessage('Please connect your wallet first');
       return;
     }
 
     try {
       setLoading(true);
-      setError(null);
+      setErrorMessage(null);
       
       const activeAuctionAddresses = await getAllActiveAuctions();
       
@@ -43,7 +42,7 @@ const AllAuctions = () => {
       setAuctions(auctionDetails.filter(auction => auction !== null));
     } catch (err) {
       console.error('Error fetching auctions:', err);
-      setError('Failed to fetch auctions: ' + err.message);
+      setErrorMessage('Failed to fetch auctions: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -132,14 +131,14 @@ const AllAuctions = () => {
         </div>
 
         {/* Error Display */}
-        {error && (
+        {errorMessage && (
           <div className="alert alert-danger alert-dismissible fade show">
             <i className="fas fa-exclamation-triangle me-2"></i>
-            {error}
+            {errorMessage}
             <button
               type="button"
               className="btn-close"
-              onClick={() => setError(null)}
+              onClick={() => setErrorMessage(null)}
             ></button>
           </div>
         )}

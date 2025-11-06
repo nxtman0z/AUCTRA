@@ -1,366 +1,37 @@
 .admin-dashboard {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+  background: #000000;
   padding-top: 80px;
-  color: #f7fafc;
+  color: #ffffff;
 }
 
 .dashboard-header {
   text-align: center;
   margin-bottom: 3rem;
+  padding: 2rem;
+}
+
+.dashboard-header h1 {
+  margin-bottom: 1rem;
 }
 
 .text-gradient {
-  background: linear-gradient(45deg, #ffd700, #ff6b35);
+  background: linear-gradient(135deg, #4da6ff, #66ff99);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
 }
 
-/* System Health Card */
-.system-health-card {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.system-health-card h4 {
-  color: #ffd700;
-  font-weight: 600;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.health-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  margin-bottom: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.health-item i {
-  color: #63b3ed;
+.dashboard-header .lead {
+  color: rgba(255, 255, 255, 0.6);
   font-size: 1.2rem;
-  margin-right: 0.5rem;
-}
-
-.health-item span:first-of-type {
-  color: #f7fafc;
-  flex: 1;
-  margin-left: 0.5rem;
-}
-
-.status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: bold;
-}
-
-.status.online,
-.status.connected,
-.status.healthy {
-  background: #27ae60;
-  color: white;
-}
-
-.status.offline,
-.status.disconnected,
-.status.error {
-  background: #e74c3c;
-  color: white;
-}
-
-/* Admin Stats Cards */
-.col-md-2dot4 {
-  flex: 0 0 19.2%;
-  max-width: 19.2%;
-}
-
-@media (max-width: 768px) {
-  .col-md-2dot4 {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 1rem;
-  }
-}
-
-.admin-stat-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 1.5rem;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-.admin-stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #ffd700, #ff6b35);
-}
-
-.admin-stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.admin-stat-card.pending {
-  border-color: rgba(255, 215, 0, 0.5);
-}
-
-.admin-stat-card.pending::before {
-  background: linear-gradient(90deg, #ffd700, #ffb347);
-}
-
-.stat-icon {
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  font-size: 1.2rem;
-  color: white;
-}
-
-.stat-icon.users {
-  background: linear-gradient(45deg, #4299e1, #3182ce);
-}
-
-.stat-icon.auctions {
-  background: linear-gradient(45deg, #f6ad55, #ed8936);
-}
-
-.stat-icon.revenue {
-  background: linear-gradient(45deg, #27ae60, #229954);
-}
-
-.stat-icon.active {
-  background: linear-gradient(45deg, #9b59b6, #8e44ad);
-}
-
-.stat-icon.pending-icon {
-  background: linear-gradient(45deg, #f1c40f, #f39c12);
-}
-
-.stat-content h3 {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 0.5rem;
-}
-
-.stat-content p {
-  color: rgba(255, 255, 255, 0.8);
   margin: 0;
-  font-size: 0.85rem;
 }
 
-/* Management Cards */
-.management-card,
-.analytics-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  height: 100%;
-}
-
-.management-card h4,
-.analytics-card h4 {
-  color: #f39c12;
-  font-weight: 600;
-}
-
-/* Users List */
-.users-list {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.user-item {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  margin-bottom: 0.75rem;
-  transition: all 0.3s ease;
-}
-
-.user-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(5px);
-}
-
-.user-avatar {
-  background: linear-gradient(45deg, #3498db, #2980b9);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 1rem;
-  color: white;
-}
-
-.user-info {
-  flex: 1;
-}
-
-.user-name {
-  font-weight: 600;
-  color: white;
-  margin-bottom: 0.25rem;
-}
-
-.user-email {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-  margin-bottom: 0.25rem;
-}
-
-.user-joined {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
-}
-
-.user-status {
-  margin-right: 1rem;
-}
-
-.badge.active {
-  background: #27ae60;
-}
-
-.badge.pending {
-  background: #f39c12;
-}
-
-.badge.suspended {
-  background: #e74c3c;
-}
-
-.user-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.user-actions .btn {
-  width: 35px;
-  height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-/* Quick Actions Grid */
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-}
-
-.action-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
-  padding: 1.5rem 1rem;
-  color: white;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.action-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-}
-
-.action-btn i {
-  font-size: 1.5rem;
-  color: #f39c12;
-}
-
-.action-btn span {
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-/* Analytics */
-.analytics-preview {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 15px;
-  padding: 2rem;
-}
-
-.metric {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  margin-bottom: 1rem;
-}
-
-.metric i {
-  font-size: 2rem;
-  color: #f39c12;
-}
-
-.metric h5 {
-  color: white;
-  margin: 0;
-  font-weight: 600;
-}
-
-.metric p {
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  font-size: 0.9rem;
-}
-
-/* Buttons */
-.btn-primary {
-  background: linear-gradient(45deg, #f39c12, #e74c3c);
-  border: none;
-  border-radius: 15px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(45deg, #e67e22, #c0392b);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+/* Loading Spinner */
+.spinner-border {
+  color: #4da6ff !important;
 }
 
 /* Responsive Design */
@@ -369,44 +40,15 @@
     padding-top: 60px;
   }
   
+  .dashboard-header {
+    padding: 1rem;
+  }
+  
   .dashboard-header h1 {
     font-size: 2rem;
   }
   
-  .management-card {
-    margin-bottom: 1.5rem;
+  .dashboard-header .lead {
+    font-size: 1rem;
   }
-  
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .user-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .user-actions {
-    justify-content: center;
-  }
-}
-
-/* Custom Scrollbar */
-.users-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.users-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-}
-
-.users-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 10px;
-}
-
-.users-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
 }

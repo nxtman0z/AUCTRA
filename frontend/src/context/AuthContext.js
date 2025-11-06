@@ -49,13 +49,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Admin login with admin key
-  const loginAdmin = async (adminKey, walletAddress) => {
+  const loginAdmin = async (adminKey) => {
     try {
       setLoading(true);
       setError(null);
 
       console.log('🔐 Attempting admin login...');
-      const response = await apiService.adminLogin({ adminKey, walletAddress });
+      const response = await apiService.adminLogin({ adminKey });
 
       if (response.success) {
         setUser(response.data.user);
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // User login with credentials
-  const loginUser = async (email, password, walletAddress) => {
+  const loginUser = async (email, password) => {
     try {
       setLoading(true);
       setError(null);
@@ -83,8 +83,7 @@ export const AuthProvider = ({ children }) => {
       console.log('🔐 Attempting user login...');
       const response = await apiService.login({ 
         login: email, 
-        password, 
-        walletAddress 
+        password
       });
 
       if (response.success) {

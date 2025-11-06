@@ -28,8 +28,9 @@ const userSchema = new mongoose.Schema({
   },
   walletAddress: {
     type: String,
-    required: [true, 'Wallet address is required'],
-    unique: true,
+    required: false,
+    unique: false,
+    sparse: true, // Allow multiple null values
     match: [/^0x[a-fA-F0-9]{40}$/, 'Please provide a valid Ethereum wallet address']
   },
   role: {
@@ -42,21 +43,99 @@ const userSchema = new mongoose.Schema({
     default: true
   },
   profile: {
-    firstName: {
+    fullName: {
       type: String,
       trim: true
     },
-    lastName: {
+    phone: {
       type: String,
       trim: true
     },
-    avatar: {
+    address: {
+      type: String,
+      trim: true
+    },
+    city: {
+      type: String,
+      trim: true
+    },
+    state: {
+      type: String,
+      trim: true
+    },
+    pincode: {
+      type: String,
+      trim: true
+    },
+    country: {
+      type: String,
+      default: 'India'
+    },
+    profilePicture: {
       type: String,
       default: null
     },
     bio: {
       type: String,
       maxlength: [500, 'Bio must not exceed 500 characters']
+    }
+  },
+  kyc: {
+    status: {
+      type: String,
+      enum: ['pending', 'submitted', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    aadhaarNumber: {
+      type: String,
+      trim: true
+    },
+    panNumber: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    aadhaarFront: {
+      type: String
+    },
+    aadhaarBack: {
+      type: String
+    },
+    panCard: {
+      type: String
+    },
+    selfie: {
+      type: String
+    },
+    submittedAt: {
+      type: Date
+    },
+    reviewedAt: {
+      type: Date
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rejectionReason: {
+      type: String
+    }
+  },
+  adminApplication: {
+    status: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none'
+    },
+    appliedAt: {
+      type: Date
+    },
+    reviewedAt: {
+      type: Date
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
   },
   auctionStats: {
@@ -85,8 +164,8 @@ const userSchema = new mongoose.Schema({
 
 // Virtual for full name
 userSchema.virtual('fullName').get(function() {
-  if (this.profile.firstName && this.profile.lastName) {
-    return `${this.profile.firstName} ${this.profile.lastName}`;
+  if (this.profile.fullName) {
+    return this.profile.fullName;
   }
   return this.username;
 });

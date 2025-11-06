@@ -18,7 +18,6 @@ export const useWeb3 = () => {
 
 // Web3 Provider Component
 export const Web3Provider = ({ children }) => {
-  // Core States
   const [account, setAccount] = useState(null);
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
@@ -27,6 +26,8 @@ export const Web3Provider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+
+
 
   // Connect Wallet
   const connectWallet = async () => {
@@ -40,7 +41,17 @@ export const Web3Provider = ({ children }) => {
 
       console.log('🔄 Requesting wallet connection...');
 
-      // Request accounts with proper error handling
+      // Check if already connected - if yes, disconnect first
+      const currentAccounts = await window.ethereum.request({
+        method: 'eth_accounts'
+      });
+
+      if (currentAccounts.length > 0) {
+        console.log('⚠️ Wallet already connected, requesting fresh connection...');
+        // We need to request accounts again to ensure user consent
+      }
+
+      // Force MetaMask popup by requesting accounts (this should always show popup for user interaction)
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts'
       });
@@ -70,8 +81,14 @@ export const Web3Provider = ({ children }) => {
 
     } catch (err) {
       console.error('❌ Wallet connection failed:', err);
-      setError(err.message);
-      resetConnection();
+      setError('Failed to connect wallet: ' + err.message);
+      
+      // Reset connection state on error
+      setAccount(null);
+      setProvider(null);
+      setSigner(null);
+      setContract(null);
+      setIsConnected(false);
     } finally {
       setLoading(false);
     }
@@ -81,23 +98,45 @@ export const Web3Provider = ({ children }) => {
   const disconnectWallet = async () => {
     try {
       console.log('🔄 Disconnecting wallet...');
-      resetConnection();
+      
+      // Clear all React state
+      setAccount(null);
+      setProvider(null);
+      setSigner(null);
+      setContract(null);
+      setIsConnected(false);
+      setUserInfo(null);
+      setError(null);
+
+      // Try to revoke permissions (if MetaMask supports it)
+      if (window.ethereum && window.ethereum.request) {
+        try {
+          // This might not work in all MetaMask versions, but we'll try
+          await window.ethereum.request({
+            method: 'wallet_revokePermissions',
+            params: [{
+              eth_accounts: {}
+            }]
+          });
+          console.log('✅ MetaMask permissions revoked');
+        } catch (err) {
+          console.log('⚠️ Could not revoke MetaMask permissions:', err.message);
+          // This is expected in most cases, not a real error
+        }
+      }
+
       console.log('✅ Wallet disconnected successfully');
     } catch (err) {
       console.error('❌ Error during disconnect:', err);
-      resetConnection(); // Force reset even on error
+      // Still clear the state even if permission revocation fails
+      setAccount(null);
+      setProvider(null);
+      setSigner(null);
+      setContract(null);
+      setIsConnected(false);
+      setUserInfo(null);
+      setError(null);
     }
-  };
-
-  // Reset connection state
-  const resetConnection = () => {
-    setAccount(null);
-    setProvider(null);
-    setSigner(null);
-    setContract(null);
-    setIsConnected(false);
-    setUserInfo(null);
-    setError(null);
   };
 
   // Fetch user information from contract
@@ -120,21 +159,17 @@ export const Web3Provider = ({ children }) => {
       } else {
         setUserInfo({
           isRegistered: false,
-          walletAddress: userAddress,
-          isAdmin: false
+          walletAddress: userAddress
         });
       }
     } catch (err) {
       console.error('Error fetching user info:', err);
       setUserInfo({
         isRegistered: false,
-        walletAddress: userAddress,
-        isAdmin: false
+        walletAddress: userAddress
       });
     }
   };
-
-  // =================== FACTORY CONTRACT FUNCTIONS ===================
 
   // Register User (Admin only function)
   const registerUser = async (userAddress, email) => {
@@ -157,25 +192,7 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  // Add Admin (Owner only)
-  const addAdmin = async (adminAddress) => {
-    if (!contract || !signer) {
-      throw new Error('Contract or signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      const tx = await contract.addAdmin(adminAddress);
-      await tx.wait();
-      return true;
-    } catch (err) {
-      throw new Error('Failed to add admin: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Create Auction (Verified users only)
+  // Create Auction
   const createAuction = async (productName, productDescription, imageHash, startingPrice, durationInHours) => {
     if (!contract) {
       throw new Error('Contract not initialized');
@@ -220,6 +237,10 @@ export const Web3Provider = ({ children }) => {
       throw new Error('Please connect your wallet first');
     }
 
+    if (!isConnected) {
+      throw new Error('Wallet not connected');
+    }
+
     try {
       const activeAuctions = await contract.getAllActiveAuctions();
       return activeAuctions;
@@ -235,10 +256,133 @@ export const Web3Provider = ({ children }) => {
     }
 
     try {
-      const userAuctions = await contract.getUserAuctions(userAddress || account);
+      const userAuctions = await contract.getUserAuctions(userAddress);
       return userAuctions;
     } catch (err) {
       throw new Error('Failed to fetch user auctions: ' + err.message);
+    }
+  };
+
+  // Get Platform Fee
+  const getPlatformFee = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const fee = await contract.platformFee();
+      return fee.toString();
+    } catch (err) {
+      throw new Error('Failed to fetch platform fee: ' + err.message);
+    }
+  };
+
+  // Get Total Auctions
+  const getTotalAuctions = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const total = await contract.totalAuctions();
+      return total.toString();
+    } catch (err) {
+      throw new Error('Failed to fetch total auctions: ' + err.message);
+    }
+  };
+
+  // Get Owner
+  const getOwner = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const owner = await contract.owner();
+      return owner;
+    } catch (err) {
+      throw new Error('Failed to fetch owner: ' + err.message);
+    }
+  };
+
+  // Get fee recipient address
+  const getFeeRecipient = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const recipient = await contract.feeRecipient();
+      return recipient;
+    } catch (err) {
+      throw new Error('Failed to fetch fee recipient: ' + err.message);
+    }
+  };
+
+  // Check if contract is paused
+  const isPaused = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const paused = await contract.paused();
+      return paused;
+    } catch (err) {
+      throw new Error('Failed to check pause status: ' + err.message);
+    }
+  };
+
+  // Get all auction addresses
+  const getAllAuctions = async () => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const totalAuctions = await contract.totalAuctions();
+      const allAuctionAddresses = [];
+      
+      for (let i = 0; i < parseInt(totalAuctions); i++) {
+        try {
+          const auctionAddress = await contract.allAuctions(i);
+          allAuctionAddresses.push(auctionAddress);
+        } catch (err) {
+          console.warn(`Failed to fetch auction at index ${i}:`, err.message);
+        }
+      }
+      
+      return allAuctionAddresses;
+    } catch (err) {
+      throw new Error('Failed to fetch all auctions: ' + err.message);
+    }
+  };
+
+  // Get address from email
+  const getAddressFromEmail = async (email) => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const address = await contract.emailToAddress(email);
+      return address;
+    } catch (err) {
+      throw new Error('Failed to fetch address from email: ' + err.message);
+    }
+  };
+
+  // Get user auctions count for specific user
+  const getUserAuctionsCount = async (userAddress) => {
+    if (!contract) {
+      throw new Error('Contract not initialized');
+    }
+
+    try {
+      const userAuctions = await contract.getUserAuctions(userAddress || account);
+      return userAuctions.length;
+    } catch (err) {
+      throw new Error('Failed to fetch user auctions count: ' + err.message);
     }
   };
 
@@ -256,41 +400,28 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  // Update platform fee (Owner only)
-  const updatePlatformFee = async (newFeeInBasisPoints) => {
-    if (!contract || !signer) {
-      throw new Error('Contract or signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      const tx = await contract.updatePlatformFee(newFeeInBasisPoints);
-      await tx.wait();
-      return true;
-    } catch (err) {
-      throw new Error('Failed to update platform fee: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Get platform fee
-  const getPlatformFee = async () => {
+  // Get user details from contract
+  const getUserDetails = async (userAddress) => {
     if (!contract) {
       throw new Error('Contract not initialized');
     }
 
     try {
-      const fee = await contract.platformFee();
-      return fee.toString();
+      const userDetails = await contract.users(userAddress || account);
+      return {
+        email: userDetails[0],
+        isVerified: userDetails[1],
+        isAdmin: userDetails[2],
+        auctionsCreated: userDetails[3].toString(),
+        auctionsWon: userDetails[4].toString(),
+        walletAddress: userDetails[5]
+      };
     } catch (err) {
-      throw new Error('Failed to fetch platform fee: ' + err.message);
+      throw new Error('Failed to fetch user details: ' + err.message);
     }
   };
 
-  // =================== AUCTION CONTRACT FUNCTIONS ===================
-
-  // Get auction details (Full details for auction page)
+  // Get auction details
   const getAuctionDetails = async (auctionAddress) => {
     if (!provider) {
       throw new Error('Provider not initialized');
@@ -322,7 +453,7 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  // Get auction summary (Light version for auction lists)
+  // Get auction summary (lighter version for lists)
   const getAuctionSummary = async (auctionAddress) => {
     if (!provider) {
       throw new Error('Provider not initialized');
@@ -342,116 +473,10 @@ export const Web3Provider = ({ children }) => {
         currentBid: ethers.formatEther(summary[1]),
         timeLeft: parseInt(summary[2]),
         isLive: summary[3],
-        image: summary[4],
-        auctionAddress
+        image: summary[4]
       };
     } catch (err) {
       throw new Error('Failed to get auction summary: ' + err.message);
-    }
-  };
-
-  // Place Bid
-  const placeBid = async (auctionAddress, bidAmount) => {
-    if (!signer) {
-      throw new Error('Signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      
-      const auctionContract = new ethers.Contract(
-        auctionAddress,
-        AUCTION_ABI,
-        signer
-      );
-
-      const bidAmountWei = ethers.parseEther(bidAmount.toString());
-      const tx = await auctionContract.placeBid({ value: bidAmountWei });
-      await tx.wait();
-      
-      return true;
-    } catch (err) {
-      throw new Error('Failed to place bid: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // End Auction
-  const endAuction = async (auctionAddress) => {
-    if (!signer) {
-      throw new Error('Signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      
-      const auctionContract = new ethers.Contract(
-        auctionAddress,
-        AUCTION_ABI,
-        signer
-      );
-
-      const tx = await auctionContract.endAuction();
-      await tx.wait();
-      
-      return true;
-    } catch (err) {
-      throw new Error('Failed to end auction: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Withdraw Funds (for non-winners)
-  const withdrawFunds = async (auctionAddress) => {
-    if (!signer) {
-      throw new Error('Signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      
-      const auctionContract = new ethers.Contract(
-        auctionAddress,
-        AUCTION_ABI,
-        signer
-      );
-
-      const tx = await auctionContract.withdraw();
-      await tx.wait();
-      
-      return true;
-    } catch (err) {
-      throw new Error('Failed to withdraw funds: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Cancel auction (Seller only, no bids)
-  const cancelAuction = async (auctionAddress) => {
-    if (!signer) {
-      throw new Error('Signer not initialized');
-    }
-
-    try {
-      setLoading(true);
-      
-      const auctionContract = new ethers.Contract(
-        auctionAddress,
-        AUCTION_ABI,
-        signer
-      );
-
-      const tx = await auctionContract.cancelAuction();
-      await tx.wait();
-      
-      return true;
-    } catch (err) {
-      throw new Error('Failed to cancel auction: ' + err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -475,7 +500,7 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  // Get withdrawable amount for user
+  // Check withdrawable amount for user
   const getWithdrawableAmount = async (auctionAddress, userAddress) => {
     if (!provider) {
       throw new Error('Provider not initialized');
@@ -535,13 +560,182 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  // Initialize on component mount  
+  // Place Bid
+  const placeBid = async (auctionAddress, bidAmount) => {
+    if (!signer) {
+      throw new Error('Signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const auctionContract = new ethers.Contract(
+        auctionAddress,
+        AUCTION_ABI,
+        signer
+      );
+
+      const bidAmountWei = ethers.parseEther(bidAmount.toString());
+      const tx = await auctionContract.placeBid({ value: bidAmountWei });
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to place bid: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // End Auction
+  const endAuction = async (auctionAddress) => {
+    if (!signer) {
+      throw new Error('Signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const auctionContract = new ethers.Contract(
+        auctionAddress,
+        AUCTION_ABI,
+        signer
+      );
+
+      const tx = await auctionContract.endAuction();
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to end auction: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Withdraw Funds
+  const withdrawFunds = async (auctionAddress) => {
+    if (!signer) {
+      throw new Error('Signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const auctionContract = new ethers.Contract(
+        auctionAddress,
+        AUCTION_ABI,
+        signer
+      );
+
+      const tx = await auctionContract.withdraw();
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to withdraw funds: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel auction (only seller, only if no bids)
+  const cancelAuction = async (auctionAddress) => {
+    if (!signer) {
+      throw new Error('Signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const auctionContract = new ethers.Contract(
+        auctionAddress,
+        AUCTION_ABI,
+        signer
+      );
+
+      const tx = await auctionContract.cancelAuction();
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to cancel auction: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Transfer ownership (only owner)
+  const transferOwnership = async (newOwnerAddress) => {
+    if (!contract || !signer) {
+      throw new Error('Contract or signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const tx = await contract.transferOwnership(newOwnerAddress);
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to transfer ownership: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update platform fee (only owner)
+  const updatePlatformFee = async (newFeeInBasisPoints) => {
+    if (!contract || !signer) {
+      throw new Error('Contract or signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      // Convert percentage to basis points (e.g., 2.5% = 250 basis points)
+      const tx = await contract.updatePlatformFee(newFeeInBasisPoints);
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to update platform fee: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add admin (only owner)
+  const addAdmin = async (adminAddress) => {
+    if (!contract || !signer) {
+      throw new Error('Contract or signer not initialized');
+    }
+
+    try {
+      setLoading(true);
+      
+      const tx = await contract.addAdmin(adminAddress);
+      await tx.wait();
+      
+      return true;
+    } catch (err) {
+      throw new Error('Failed to add admin: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initialize on component mount
   useEffect(() => {
     const initializeWeb3 = async () => {
       try {
         if (typeof window.ethereum !== 'undefined') {
           const web3Provider = new ethers.BrowserProvider(window.ethereum);
           setProvider(web3Provider);
+          
+          // Don't auto-connect, just check if MetaMask is available
+          // User must explicitly click "Connect Wallet" button
         } else {
           setError('Please install MetaMask to use this application');
         }
@@ -555,12 +749,17 @@ export const Web3Provider = ({ children }) => {
     // Listen for account changes
     if (window.ethereum) {
       const handleAccountsChanged = (accounts) => {
-        if (accounts.length === 0 && isConnected) {
-          disconnectWallet();
+        if (accounts.length === 0) {
+          // Only disconnect if we were previously connected
+          if (isConnected) {
+            disconnectWallet();
+          }
         }
+        // Don't auto-connect on account change - user must manually connect
       };
 
       const handleChainChanged = () => {
+        // Refresh the page to reset the dapp state
         window.location.reload();
       };
 
@@ -574,11 +773,10 @@ export const Web3Provider = ({ children }) => {
         }
       };
     }
-  }, [isConnected]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Context value with only necessary functions
   const value = {
-    // States
+    // State
     account,
     provider,
     signer,
@@ -587,32 +785,48 @@ export const Web3Provider = ({ children }) => {
     loading,
     error,
     userInfo,
-    
-    // Wallet Functions
+
+    // Actions
     connectWallet,
     disconnectWallet,
-    
-    // Factory Contract Functions
     registerUser,
-    addAdmin,
     createAuction,
     getAllActiveAuctions,
     getUserAuctions,
-    checkIsAdmin,
-    updatePlatformFee,
-    getPlatformFee,
-    
-    // Auction Contract Functions  
     getAuctionDetails,
-    getAuctionSummary,
     placeBid,
     endAuction,
     withdrawFunds,
-    cancelAuction,
+    fetchUserInfo,
+    
+    // Factory Contract Read Functions
+    getPlatformFee,
+    getTotalAuctions,
+    getOwner,
+    getFeeRecipient,
+    isPaused,
+    getAllAuctions,
+    getAddressFromEmail,
+    getUserAuctionsCount,
+    checkIsAdmin,
+    getUserDetails,
+    
+    // Auction Contract Read Functions
+    getAuctionSummary,
     getBidHistory,
     getWithdrawableAmount,
     getPendingRefund,
-    getTimeRemaining
+    getTimeRemaining,
+    
+    // Write Functions (require transactions)
+    cancelAuction,
+    transferOwnership,
+    updatePlatformFee,
+    addAdmin,
+
+    // Utils
+    setError,
+    setLoading
   };
 
   return (

@@ -1,6 +1,6 @@
 # 🏛️ AUCTRA - Decentralized Auction Platform
 
-![AUCTRA Logo](frontend/public/AUCTRA_LOGO-removebg-preview.png)
+![AUCTRA Logo](frontend/public/auctra_logo.png)
 
 ## 🌟 Overview
 

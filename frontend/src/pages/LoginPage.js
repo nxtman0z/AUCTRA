@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useWeb3 } from '../context/Web3Context';
 import './LoginPage.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { loginAdmin, loginUser } = useAuth();
-  const { connectWallet, account, isConnected } = useWeb3();
   
   const [activeTab, setActiveTab] = useState('user'); // 'user' or 'admin'
   const [loading, setLoading] = useState(false);
@@ -52,17 +50,11 @@ const LoginPage = () => {
         return;
       }
 
-      if (!isConnected) {
-        setError('Please connect your wallet first');
-        return;
-      }
-
       console.log('🔐 Attempting user login with:', {
-        email: userForm.email,
-        walletAddress: account
+        email: userForm.email
       });
 
-      const result = await loginUser(userForm.email, userForm.password, account);
+      const result = await loginUser(userForm.email, userForm.password);
       
       if (result.success) {
         setSuccess('Login successful! Redirecting...');
@@ -93,14 +85,9 @@ const LoginPage = () => {
         return;
       }
 
-      if (!isConnected) {
-        setError('Please connect your wallet first');
-        return;
-      }
-
       console.log('👑 Attempting admin login...');
 
-      const result = await loginAdmin(adminForm.adminKey, account);
+      const result = await loginAdmin(adminForm.adminKey);
       
       if (result.success) {
         setSuccess('Admin login successful! Redirecting...');
@@ -118,79 +105,40 @@ const LoginPage = () => {
     }
   };
 
-  const handleWalletConnect = async () => {
-    try {
-      setError('');
-      await connectWallet();
-      setSuccess('Wallet connected successfully!');
-    } catch (err) {
-      setError('Failed to connect wallet. Please try again.');
-    }
-  };
-
   return (
     <div className="login-page">
       <div className="login-container">
         {/* Header */}
         <div className="login-header">
           <Link to="/" className="brand-link">
-            <img src="/auctra-logo.png" alt="Auctra" className="login-logo" />
             <span className="brand-name">Auctra</span>
           </Link>
           <p className="login-subtitle">Welcome back to the future of auctions</p>
         </div>
 
-        {/* Wallet Connection Status */}
-        <div className="wallet-status">
-          {!isConnected ? (
-            <div className="wallet-connect">
-              <div className="alert alert-warning">
-                <i className="fas fa-wallet me-2"></i>
-                Please connect your wallet to continue
-              </div>
-              <button 
-                className="btn btn-outline-primary btn-lg w-100"
-                onClick={handleWalletConnect}
-                disabled={loading}
-              >
-                <i className="fas fa-wallet me-2"></i>
-                Connect Wallet
-              </button>
-            </div>
-          ) : (
-            <div className="wallet-connected">
-              <div className="alert alert-success">
-                <i className="fas fa-check-circle me-2"></i>
-                Wallet Connected: {account?.substring(0, 6)}...{account?.substring(account.length - 4)}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Login Form */}
-        {isConnected && (
-          <div className="login-form-container">
-            {/* Tab Navigation */}
-            <div className="login-tabs">
-              <button 
-                className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('user');
-                  setError('');
-                  setSuccess('');
-                }}
-              >
-                <i className="fas fa-user me-2"></i>
-                User Login
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveTab('admin');
-                  setError('');
-                  setSuccess('');
-                }}
-              >
+        <div className="login-form-container">
+          {/* Tab Navigation */}
+          <div className="login-tabs">
+            <button 
+              className={`tab-btn ${activeTab === 'user' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('user');
+                setError('');
+                setSuccess('');
+              }}
+            >
+              <i className="fas fa-user me-2"></i>
+              User Login
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'admin' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('admin');
+                setError('');
+                setSuccess('');
+              }}
+            >
                 <i className="fas fa-shield-alt me-2"></i>
                 Admin Login
               </button>
@@ -289,10 +237,6 @@ const LoginPage = () => {
                     required
                     disabled={loading}
                   />
-                  <div className="form-text">
-                    <i className="fas fa-info-circle me-1"></i>
-                    Admin key: AUCTRA_ADMIN_2024
-                  </div>
                 </div>
 
                 <button 
@@ -324,7 +268,6 @@ const LoginPage = () => {
               </Link>
             </div>
           </div>
-        )}
 
         {/* Back to Home */}
         <div className="back-home">
