@@ -17,7 +17,7 @@ const Header = () => {
       <div className="container">
         <Link className="navbar-brand fw-bold d-flex align-items-center" to="/dashboard">
           <img 
-            src="/logo-auctra.svg" 
+            src="/auctra_logo.png" 
             alt="AUCTRA Logo" 
             height="40" 
             className="me-2"

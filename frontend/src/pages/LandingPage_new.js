@@ -10,7 +10,7 @@ const LandingPageNew = () => {
         <div className="nav-container">
           <Link className="nav-brand" to="/">
             <img 
-              src="/logo-auctra.svg" 
+              src="/auctra_logo.png" 
               alt="AUCTRA Logo" 
               style={{height: '40px', width: 'auto'}}
             />
