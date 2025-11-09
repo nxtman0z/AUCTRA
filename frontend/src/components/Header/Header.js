@@ -21,7 +21,11 @@ const Header = () => {
             alt="AUCTRA Logo" 
             height="40" 
             className="me-2"
+            style={{objectFit: 'contain'}}
           />
+          <span style={{ color: 'var(--text-headings)', fontSize: '1.5rem', fontWeight: '700' }}>
+            AUCTRA
+          </span>
         </Link>
         
         <button

@@ -12,8 +12,9 @@ const LandingPageNew = () => {
             <img 
               src="/auctra_logo.png" 
               alt="AUCTRA Logo" 
-              style={{height: '40px', width: 'auto'}}
+              style={{height: '40px', width: 'auto', marginRight: '0.5rem'}}
             />
+            <span className="brand-text">AUCTRA</span>
           </Link>
           
           <div className="nav-menu">
@@ -239,6 +240,103 @@ const LandingPageNew = () => {
               <Link to="/dashboard" className="cta-btn cta-btn-secondary">
                 Explore Auctions
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="contact-section">
+        <div className="contact-container">
+          <div className="section-header">
+            <h2 className="section-title">Get In Touch</h2>
+            <p className="section-description">
+              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            </p>
+          </div>
+          
+          <div className="contact-content">
+            <div className="contact-info">
+              <div className="contact-card">
+                <div className="contact-icon">
+                  <i className="fas fa-envelope"></i>
+                </div>
+                <h3>Email Us</h3>
+                <p>support@auctra.com</p>
+                <p>business@auctra.com</p>
+              </div>
+              
+              <div className="contact-card">
+                <div className="contact-icon">
+                  <i className="fas fa-phone"></i>
+                </div>
+                <h3>Call Us</h3>
+                <p>+1 (555) 123-4567</p>
+                <p>Mon-Fri 9AM-6PM EST</p>
+              </div>
+              
+              <div className="contact-card">
+                <div className="contact-icon">
+                  <i className="fas fa-map-marker-alt"></i>
+                </div>
+                <h3>Visit Us</h3>
+                <p>123 Blockchain Street</p>
+                <p>Crypto City, CC 12345</p>
+              </div>
+            </div>
+            
+            <div className="contact-form">
+              <form className="form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="name">Full Name</label>
+                    <input 
+                      type="text" 
+                      id="name" 
+                      name="name" 
+                      placeholder="Enter your full name"
+                      required 
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="email">Email Address</label>
+                    <input 
+                      type="email" 
+                      id="email" 
+                      name="email" 
+                      placeholder="Enter your email"
+                      required 
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="subject">Subject</label>
+                  <input 
+                    type="text" 
+                    id="subject" 
+                    name="subject" 
+                    placeholder="What's this about?"
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="message">Message</label>
+                  <textarea 
+                    id="message" 
+                    name="message" 
+                    rows="5"
+                    placeholder="Tell us how we can help you"
+                    required
+                  ></textarea>
+                </div>
+                
+                <button type="submit" className="form-submit">
+                  <i className="fas fa-paper-plane"></i>
+                  Send Message
+                </button>
+              </form>
             </div>
           </div>
         </div>
