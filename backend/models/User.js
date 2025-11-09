@@ -80,64 +80,6 @@ const userSchema = new mongoose.Schema({
       maxlength: [500, 'Bio must not exceed 500 characters']
     }
   },
-  kyc: {
-    status: {
-      type: String,
-      enum: ['pending', 'submitted', 'approved', 'rejected'],
-      default: 'pending'
-    },
-    aadhaarNumber: {
-      type: String,
-      trim: true
-    },
-    panNumber: {
-      type: String,
-      trim: true,
-      uppercase: true
-    },
-    aadhaarFront: {
-      type: String
-    },
-    aadhaarBack: {
-      type: String
-    },
-    panCard: {
-      type: String
-    },
-    selfie: {
-      type: String
-    },
-    submittedAt: {
-      type: Date
-    },
-    reviewedAt: {
-      type: Date
-    },
-    reviewedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    },
-    rejectionReason: {
-      type: String
-    }
-  },
-  adminApplication: {
-    status: {
-      type: String,
-      enum: ['none', 'pending', 'approved', 'rejected'],
-      default: 'none'
-    },
-    appliedAt: {
-      type: Date
-    },
-    reviewedAt: {
-      type: Date
-    },
-    reviewedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  },
   auctionStats: {
     totalBids: {
       type: Number,
@@ -150,6 +92,77 @@ const userSchema = new mongoose.Schema({
     totalSpent: {
       type: Number,
       default: 0
+    }
+  },
+  isVerifiedForAuctions: {
+    type: Boolean,
+    default: false
+  },
+  verificationRequest: {
+    aadhaar: {
+      type: String,
+      trim: true
+    },
+    pan: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    address: {
+      street: {
+        type: String,
+        trim: true
+      },
+      city: {
+        type: String,
+        trim: true
+      },
+      state: {
+        type: String,
+        trim: true
+      },
+      pincode: {
+        type: String,
+        trim: true
+      }
+    },
+    reason: {
+      type: String,
+      trim: true
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    submittedAt: {
+      type: Date,
+      default: Date.now
+    },
+    reviewedAt: {
+      type: Date
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reviewComments: {
+      type: String,
+      trim: true
+    },
+    documents: {
+      aadhaar: {
+        type: String,
+        trim: true
+      },
+      pan: {
+        type: String,
+        trim: true
+      },
+      photo: {
+        type: String,
+        trim: true
+      }
     }
   },
   lastLogin: {

@@ -339,8 +339,7 @@ router.put('/profile', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
-      profile: user.profile,
-      kycStatus: user.kyc.status
+      profile: user.profile
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -351,11 +350,45 @@ router.put('/profile', async (req, res) => {
   }
 });
 
-// @desc    Get KYC status
-// @route   GET /api/users/kyc-status
+// @desc    Submit verification request for auction creation
+// @route   POST /api/users/verification-request
 // @access  Private
-router.get('/kyc-status', async (req, res) => {
+router.post('/verification-request', async (req, res) => {
   try {
+    const {
+      aadhaar,
+      pan,
+      address,
+      city,
+      state,
+      pincode,
+      reason
+    } = req.body;
+
+    // Validate required fields
+    if (!aadhaar || !pan || !address || !city || !state || !pincode || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    // Validate Aadhaar format (12 digits)
+    if (!/^\d{12}$/.test(aadhaar)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Aadhaar number format'
+      });
+    }
+
+    // Validate PAN format
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid PAN number format'
+      });
+    }
+
     const user = await User.findById(req.user.id);
     
     if (!user) {
@@ -365,17 +398,58 @@ router.get('/kyc-status', async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    // Check if user already has a pending or approved verification
+    if (user.verificationRequest && user.verificationRequest.status === 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Verification request already pending'
+      });
+    }
+
+    if (user.verificationRequest && user.verificationRequest.status === 'approved') {
+      return res.status(400).json({
+        success: false,
+        message: 'User already verified for auction creation'
+      });
+    }
+
+    // Create verification request
+    const verificationRequest = {
+      aadhaar,
+      pan,
+      address: {
+        street: address,
+        city,
+        state,
+        pincode
+      },
+      reason,
+      status: 'pending',
+      submittedAt: new Date(),
+      documents: {
+        // In real implementation, handle file uploads here
+        aadhaar: 'placeholder_aadhaar.pdf',
+        pan: 'placeholder_pan.jpg',
+        photo: 'placeholder_photo.jpg'
+      }
+    };
+
+    user.verificationRequest = verificationRequest;
+    await user.save();
+
+    res.status(201).json({
       success: true,
-      kycStatus: user.kyc.status,
-      kyc: {
-        aadhaarNumber: user.kyc.aadhaarNumber ? user.kyc.aadhaarNumber.replace(/.(?=.{4})/g, 'X') : null,
-        panNumber: user.kyc.panNumber ? user.kyc.panNumber.replace(/.(?=.{4})/g, 'X') : null,
-        submittedAt: user.kyc.submittedAt
+      message: 'Verification request submitted successfully',
+      data: {
+        verificationRequest: {
+          status: verificationRequest.status,
+          submittedAt: verificationRequest.submittedAt
+        }
       }
     });
+
   } catch (error) {
-    console.error('Get KYC status error:', error);
+    console.error('Verification request error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -383,67 +457,39 @@ router.get('/kyc-status', async (req, res) => {
   }
 });
 
-// @desc    Submit KYC documents
-// @route   POST /api/users/kyc-submit
-// @access  Private
-router.post('/kyc-submit', async (req, res) => {
+// @desc    Get all verification requests (Admin only)
+// @route   GET /api/users/verification-requests
+// @access  Private (Admin only)
+router.get('/verification-requests', restrictTo('admin'), async (req, res) => {
   try {
-    const { aadhaarNumber, panNumber } = req.body;
-    
-    const user = await User.findById(req.user.id);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+    const users = await User.find({
+      'verificationRequest.status': { $in: ['pending', 'approved', 'rejected'] }
+    }).select('username email verificationRequest createdAt');
 
-    // Check if KYC already approved
-    if (user.kyc.status === 'approved') {
-      return res.status(400).json({
-        success: false,
-        message: 'KYC already approved'
-      });
-    }
-
-    // Validate Aadhaar and PAN
-    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid Aadhaar number'
-      });
-    }
-
-    if (!panNumber || panNumber.length !== 10) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid PAN number'
-      });
-    }
-
-    // Update KYC details
-    user.kyc.aadhaarNumber = aadhaarNumber;
-    user.kyc.panNumber = panNumber.toUpperCase();
-    user.kyc.status = 'submitted';
-    user.kyc.submittedAt = new Date();
-    
-    // In production, you would upload files to cloud storage (AWS S3, Cloudinary, etc.)
-    // For now, we'll just store placeholder paths
-    user.kyc.aadhaarFront = 'uploads/kyc/aadhaar_front_' + user._id;
-    user.kyc.aadhaarBack = 'uploads/kyc/aadhaar_back_' + user._id;
-    user.kyc.panCard = 'uploads/kyc/pan_' + user._id;
-    user.kyc.selfie = 'uploads/kyc/selfie_' + user._id;
-
-    await user.save();
+    const verificationRequests = users.map(user => ({
+      id: user._id,
+      userId: user._id,
+      username: user.username,
+      email: user.email,
+      aadhaar: user.verificationRequest.aadhaar,
+      pan: user.verificationRequest.pan,
+      address: user.verificationRequest.address,
+      reason: user.verificationRequest.reason,
+      status: user.verificationRequest.status,
+      submittedAt: user.verificationRequest.submittedAt,
+      reviewedAt: user.verificationRequest.reviewedAt,
+      reviewedBy: user.verificationRequest.reviewedBy,
+      documents: user.verificationRequest.documents
+    }));
 
     res.status(200).json({
       success: true,
-      message: 'KYC submitted successfully. Admin will review your documents.',
-      kycStatus: user.kyc.status
+      count: verificationRequests.length,
+      data: verificationRequests
     });
+
   } catch (error) {
-    console.error('KYC submit error:', error);
+    console.error('Get verification requests error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -451,196 +497,63 @@ router.post('/kyc-submit', async (req, res) => {
   }
 });
 
-// @desc    Apply for admin role
-// @route   POST /api/users/apply-admin
-// @access  Private
-router.post('/apply-admin', async (req, res) => {
+// @desc    Review verification request (Admin only)
+// @route   PUT /api/users/verification-requests/:id
+// @access  Private (Admin only)
+router.put('/verification-requests/:id', restrictTo('admin'), async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const { action, reviewComments } = req.body;
     
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    // Check if already admin
-    if (user.role === 'admin') {
+    if (!action || !['approve', 'reject'].includes(action)) {
       return res.status(400).json({
         success: false,
-        message: 'You are already an admin'
-      });
-    }
-
-    // Check if KYC is approved
-    if (user.kyc.status !== 'approved') {
-      return res.status(400).json({
-        success: false,
-        message: 'Please complete KYC verification before applying for admin role'
-      });
-    }
-
-    // Check if already applied
-    if (user.adminApplication.status === 'pending') {
-      return res.status(400).json({
-        success: false,
-        message: 'Your admin application is already pending review'
-      });
-    }
-
-    // Submit admin application
-    user.adminApplication.status = 'pending';
-    user.adminApplication.appliedAt = new Date();
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Admin role application submitted successfully'
-    });
-  } catch (error) {
-    console.error('Apply admin error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// @desc    Get pending KYC submissions (Admin only)
-// @route   GET /api/users/kyc-pending
-// @access  Private/Admin
-router.get('/kyc-pending', restrictTo('admin'), async (req, res) => {
-  try {
-    const users = await User.find({ 'kyc.status': 'submitted' })
-      .select('username email profile.fullName kyc')
-      .sort({ 'kyc.submittedAt': -1 });
-
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      data: users
-    });
-  } catch (error) {
-    console.error('Get pending KYC error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// @desc    Approve/Reject KYC (Admin only)
-// @route   PUT /api/users/:id/kyc-review
-// @access  Private/Admin
-router.put('/:id/kyc-review', restrictTo('admin'), async (req, res) => {
-  try {
-    const { status, rejectionReason } = req.body;
-    
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid status. Must be approved or rejected'
+        message: 'Invalid action. Use "approve" or "reject"'
       });
     }
 
     const user = await User.findById(req.params.id);
     
-    if (!user) {
+    if (!user || !user.verificationRequest) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: 'Verification request not found'
       });
     }
 
-    user.kyc.status = status;
-    user.kyc.reviewedAt = new Date();
-    user.kyc.reviewedBy = req.user.id;
-    
-    if (status === 'rejected' && rejectionReason) {
-      user.kyc.rejectionReason = rejectionReason;
-    }
-
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: `KYC ${status} successfully`,
-      data: { user }
-    });
-  } catch (error) {
-    console.error('KYC review error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// @desc    Get pending admin applications (Admin only)
-// @route   GET /api/users/admin-applications
-// @access  Private/Admin
-router.get('/admin-applications', restrictTo('admin'), async (req, res) => {
-  try {
-    const users = await User.find({ 'adminApplication.status': 'pending' })
-      .select('username email profile kyc adminApplication')
-      .sort({ 'adminApplication.appliedAt': -1 });
-
-    res.status(200).json({
-      success: true,
-      count: users.length,
-      data: users
-    });
-  } catch (error) {
-    console.error('Get admin applications error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    });
-  }
-});
-
-// @desc    Approve/Reject admin application (Admin only)
-// @route   PUT /api/users/:id/admin-review
-// @access  Private/Admin
-router.put('/:id/admin-review', restrictTo('admin'), async (req, res) => {
-  try {
-    const { status } = req.body;
-    
-    if (!['approved', 'rejected'].includes(status)) {
+    if (user.verificationRequest.status !== 'pending') {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be approved or rejected'
+        message: 'This verification request has already been reviewed'
       });
     }
 
-    const user = await User.findById(req.params.id);
-    
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
+    // Update verification request
+    user.verificationRequest.status = action === 'approve' ? 'approved' : 'rejected';
+    user.verificationRequest.reviewedAt = new Date();
+    user.verificationRequest.reviewedBy = req.user.id;
+    user.verificationRequest.reviewComments = reviewComments;
 
-    user.adminApplication.status = status;
-    user.adminApplication.reviewedAt = new Date();
-    user.adminApplication.reviewedBy = req.user.id;
-    
-    if (status === 'approved') {
-      user.role = 'admin';
+    // If approved, set user as verified for auction creation
+    if (action === 'approve') {
+      user.isVerifiedForAuctions = true;
     }
 
     await user.save();
 
     res.status(200).json({
       success: true,
-      message: `Admin application ${status} successfully`,
-      data: { user }
+      message: `Verification request ${action}d successfully`,
+      data: {
+        verificationRequest: {
+          status: user.verificationRequest.status,
+          reviewedAt: user.verificationRequest.reviewedAt,
+          reviewComments: user.verificationRequest.reviewComments
+        }
+      }
     });
+
   } catch (error) {
-    console.error('Admin review error:', error);
+    console.error('Review verification request error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

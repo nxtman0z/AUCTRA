@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import apiService from '../services/apiService';
 
 const AuthContext = createContext();
@@ -17,12 +17,42 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check for existing session on load
-  useEffect(() => {
-    checkAuthStatus();
+  // Logout function - defined first to avoid use-before-define
+  const logout = useCallback(async () => {
+    try {
+      setLoading(true);
+      await apiService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear all user data
+      setUser(null);
+      setIsAuthenticated(false);
+      setError(null);
+      setLoading(false);
+      
+      // Clear all localStorage data including wallet connection
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('walletConnected');
+      localStorage.removeItem('connectedWallet');
+      
+      // Force disconnect MetaMask if connected
+      if (window.ethereum) {
+        try {
+          // Request to disconnect (this will not actually disconnect but clear our state)
+          console.log('Clearing wallet connection state');
+        } catch (err) {
+          console.error('Error clearing wallet state:', err);
+        }
+      }
+      
+      // Force page reload to ensure clean state
+      window.location.href = '/login';
+    }
   }, []);
 
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
@@ -46,7 +76,12 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout]);
+
+  // Check for existing session on load
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   // Admin login with admin key
   const loginAdmin = async (adminKey) => {
@@ -125,21 +160,6 @@ export const AuthProvider = ({ children }) => {
       setError(error.message);
       return { success: false, error: error.message };
     } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout
-  const logout = async () => {
-    try {
-      setLoading(true);
-      await apiService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-      setError(null);
       setLoading(false);
     }
   };

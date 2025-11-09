@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useWeb3 } from '../context/Web3Context';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useWeb3 } from '../context/Web3Context';
 import './CreateAuction.css';
 
 const CreateAuction = () => {
@@ -11,8 +11,11 @@ const CreateAuction = () => {
     createAuction,
     loading
   } = useWeb3();
+  
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const [checkingVerification, setCheckingVerification] = useState(true);
 
   const [formData, setFormData] = useState({
     productName: '',
@@ -25,43 +28,43 @@ const CreateAuction = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [kycStatus, setKycStatus] = useState(null);
-  const [kycLoading, setKycLoading] = useState(true);
 
-  // Check KYC status on component mount
+  // Check verification status on component mount
   useEffect(() => {
-    checkKYCStatus();
-  }, []);
+    const checkVerificationStatus = async () => {
+      try {
+        const response = await fetch('/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
-  const checkKYCStatus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/users/kyc-status', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setKycStatus(data.kycStatus);
+        const data = await response.json();
         
-        // If KYC is not approved, show error and redirect after 3 seconds
-        if (data.kycStatus !== 'approved') {
-          setErrorMessage('You must complete KYC verification before creating auctions. Redirecting to KYC page...');
-          setTimeout(() => {
-            navigate('/profile/kyc');
-          }, 3000);
+        if (response.ok && data.data.user) {
+          const userData = data.data.user;
+          
+          // Check if user has verification request and its status
+          if (userData.verificationRequest) {
+            setVerificationStatus(userData.verificationRequest.status);
+          } else if (userData.isVerifiedForAuctions) {
+            setVerificationStatus('approved');
+          } else {
+            setVerificationStatus(null);
+          }
         }
+      } catch (error) {
+        console.error('Error checking verification status:', error);
+        setVerificationStatus(null);
+      } finally {
+        setCheckingVerification(false);
       }
-    } catch (error) {
-      console.error('Error checking KYC status:', error);
-      setErrorMessage('Failed to verify KYC status. Please try again.');
-    } finally {
-      setKycLoading(false);
+    };
+
+    if (user) {
+      checkVerificationStatus();
     }
-  };
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -73,15 +76,6 @@ const CreateAuction = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Check KYC status before allowing auction creation
-    if (kycStatus !== 'approved') {
-      setErrorMessage('You must complete KYC verification before creating auctions.');
-      setTimeout(() => {
-        navigate('/profile/kyc');
-      }, 2000);
-      return;
-    }
 
     if (!formData.productName || !formData.productDescription || !formData.startingPrice || !formData.durationInHours) {
       setErrorMessage('Please fill in all required fields');
@@ -128,56 +122,121 @@ const CreateAuction = () => {
     }
   };
 
-  // Show loading while checking KYC
-  if (kycLoading) {
+  if (checkingVerification) {
     return (
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-6 text-center">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+      <div className="create-auction-page">
+        <div className="container mt-5">
+          <div className="row justify-content-center">
+            <div className="col-md-6 text-center">
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <h5>Checking verification status...</h5>
             </div>
-            <p className="text-muted mt-3">Checking KYC status...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // Check KYC verification
-  if (kycStatus !== 'approved') {
+  // Check if user needs to get verified
+  if (!verificationStatus || verificationStatus === 'rejected') {
     return (
-      <div className="container mt-5">
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="alert alert-warning text-center" style={{ 
-              background: 'rgba(255, 193, 7, 0.1)', 
-              border: '1px solid #ffc107',
-              borderRadius: '10px',
-              padding: '30px'
-            }}>
-              <i className="fas fa-id-card fa-4x text-warning mb-3"></i>
-              <h3 style={{ color: '#ffc107' }}>KYC Verification Required</h3>
-              <p className="text-white mb-4">
-                You must complete KYC verification before creating auctions. This helps ensure a secure and trusted marketplace.
-              </p>
-              <div className="mb-3">
-                <span className="badge bg-warning text-dark px-3 py-2" style={{ fontSize: '1rem' }}>
-                  KYC Status: {kycStatus === 'pending' ? 'Not Started' : kycStatus === 'submitted' ? 'Under Review' : kycStatus === 'rejected' ? 'Rejected' : 'Pending'}
-                </span>
+      <div className="create-auction-page">
+        <div className="container mt-5">
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <div className="verification-required-card">
+                <div className="text-center">
+                  <i className="fas fa-user-check fa-4x text-warning mb-4"></i>
+                  <h2>Verification Required</h2>
+                  <p className="text-muted mb-4">
+                    To create auctions on AUCTRA, you need to complete our verification process.
+                    This helps us ensure the security and authenticity of all auction creators.
+                  </p>
+                  
+                  <div className="verification-info mb-4">
+                    <h5>What you'll need:</h5>
+                    <ul className="list-unstyled">
+                      <li><i className="fas fa-id-card text-primary me-2"></i>Valid Aadhaar Card</li>
+                      <li><i className="fas fa-credit-card text-primary me-2"></i>Valid PAN Card</li>
+                      <li><i className="fas fa-camera text-primary me-2"></i>Recent Photo</li>
+                      <li><i className="fas fa-home text-primary me-2"></i>Address Information</li>
+                    </ul>
+                  </div>
+
+                  {verificationStatus === 'rejected' && (
+                    <div className="alert alert-warning">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      Your previous verification request was rejected. Please submit a new request with correct information.
+                    </div>
+                  )}
+
+                  <button
+                    className="btn btn-primary btn-lg"
+                    onClick={() => navigate('/user-verification')}
+                  >
+                    <i className="fas fa-arrow-right me-2"></i>
+                    Start Verification Process
+                  </button>
+                </div>
               </div>
-              <button 
-                className="btn btn-warning btn-lg"
-                onClick={() => navigate('/profile/kyc')}
-                style={{
-                  background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
-                  border: 'none',
-                  fontWeight: 'bold'
-                }}
-              >
-                <i className="fas fa-arrow-right me-2"></i>
-                {kycStatus === 'pending' ? 'Start KYC Verification' : kycStatus === 'rejected' ? 'Resubmit KYC' : 'View KYC Status'}
-              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if verification is pending
+  if (verificationStatus === 'pending') {
+    return (
+      <div className="create-auction-page">
+        <div className="container mt-5">
+          <div className="row justify-content-center">
+            <div className="col-md-8">
+              <div className="verification-pending-card">
+                <div className="text-center">
+                  <i className="fas fa-clock fa-4x text-info mb-4"></i>
+                  <h2>Verification Under Review</h2>
+                  <p className="text-muted mb-4">
+                    Your verification request is currently being reviewed by our admin team.
+                    You'll receive an email notification once the review is complete.
+                  </p>
+                  
+                  <div className="status-timeline mb-4">
+                    <div className="timeline-step completed">
+                      <i className="fas fa-check"></i>
+                      <span>Application Submitted</span>
+                    </div>
+                    <div className="timeline-step active">
+                      <i className="fas fa-clock"></i>
+                      <span>Under Review</span>
+                    </div>
+                    <div className="timeline-step">
+                      <i className="fas fa-user-check"></i>
+                      <span>Approved</span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex gap-3 justify-content-center">
+                    <button
+                      className="btn btn-outline-primary"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      <i className="fas fa-arrow-left me-2"></i>
+                      Back to Dashboard
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => window.location.reload()}
+                    >
+                      <i className="fas fa-refresh me-2"></i>
+                      Check Status
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

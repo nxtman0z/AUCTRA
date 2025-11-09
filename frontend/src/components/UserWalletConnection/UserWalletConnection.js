@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useWeb3 } from '../../context/Web3Context';
-import './WalletConnection.css';
+import './UserWalletConnection.css';
 
-const WalletConnection = () => {
+const UserWalletConnection = () => {
   const { 
     account, 
     isConnected, 
@@ -15,37 +15,38 @@ const WalletConnection = () => {
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState(null);
 
-  const walletOptions = [
+  const userWalletOptions = [
     {
       id: 'metamask',
       name: 'MetaMask',
       icon: 'fab fa-ethereum',
-      description: 'Connect using MetaMask wallet',
+      description: 'Most popular wallet for beginners',
       available: window.ethereum && window.ethereum.isMetaMask,
-      installUrl: 'https://metamask.io/download.html'
+      installUrl: 'https://metamask.io/download.html',
+      popular: true
     },
     {
       id: 'walletconnect',
       name: 'WalletConnect',
       icon: 'fas fa-qrcode',
-      description: 'Scan QR code with wallet app',
-      available: false, // Will implement later
+      description: 'Connect mobile wallets via QR',
+      available: false,
       comingSoon: true
     },
     {
       id: 'coinbase',
       name: 'Coinbase Wallet',
-      icon: 'fab fa-bitcoin',
-      description: 'Connect using Coinbase Wallet',
-      available: false, // Will implement later
+      icon: 'fas fa-coins',
+      description: 'Easy wallet for new users',
+      available: false,
       comingSoon: true
     },
     {
       id: 'trustwallet',
       name: 'Trust Wallet',
       icon: 'fas fa-shield-alt',
-      description: 'Connect using Trust Wallet',
-      available: false, // Will implement later
+      description: 'Mobile-first secure wallet',
+      available: false,
       comingSoon: true
     }
   ];
@@ -53,23 +54,39 @@ const WalletConnection = () => {
   const handleWalletConnect = async (walletType) => {
     try {
       setConnectingWallet(walletType);
+      
+      // Force fresh connection for user
+      localStorage.removeItem('userWalletConnected');
+      
       const result = await connectWallet(walletType);
       
       if (result) {
+        localStorage.setItem('userWalletConnected', 'true');
+        localStorage.setItem('userWalletType', walletType);
         setShowWalletOptions(false);
-        console.log('🎉 Wallet connected successfully!');
+        console.log('🎯 User wallet connected successfully!');
       }
     } catch (err) {
-      console.error('Connection failed:', err);
+      console.error('User wallet connection failed:', err);
     } finally {
       setConnectingWallet(null);
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnectWallet();
+      localStorage.removeItem('userWalletConnected');
+      localStorage.removeItem('userWalletType');
+      console.log('🎯 User wallet disconnected');
+    } catch (err) {
+      console.error('User disconnect failed:', err);
     }
   };
 
   const copyAddress = () => {
     if (account) {
       navigator.clipboard.writeText(account);
-      // You can add a toast notification here
     }
   };
 
@@ -78,24 +95,28 @@ const WalletConnection = () => {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  // If connected, show connected state
+  // User connected state
   if (isConnected && account) {
     return (
-      <div className="wallet-connected">
-        <div className="wallet-info">
-          <div className="wallet-status">
-            <i className="fas fa-circle connected-dot"></i>
-            <span>Connected</span>
+      <div className="user-wallet-connected">
+        <div className="user-wallet-info">
+          <div className="user-status">
+            <i className="fas fa-user user-icon"></i>
+            <span className="user-label">My Wallet</span>
           </div>
-          <div className="wallet-address" onClick={copyAddress} title="Click to copy">
+          <div className="user-address" onClick={copyAddress} title="Click to copy address">
             <i className="fas fa-wallet"></i>
             <span>{formatAddress(account)}</span>
             <i className="fas fa-copy copy-icon"></i>
           </div>
+          <div className="user-balance">
+            <i className="fas fa-coins"></i>
+            <span>Ready for auctions</span>
+          </div>
         </div>
         <button 
-          className="btn btn-outline-danger btn-sm"
-          onClick={disconnectWallet}
+          className="btn btn-outline-secondary btn-sm user-disconnect"
+          onClick={handleDisconnect}
           disabled={loading}
         >
           {loading ? (
@@ -108,21 +129,19 @@ const WalletConnection = () => {
     );
   }
 
-  // If not connected, show connection options
+  // User connection options
   return (
-    <div className="wallet-connection">
-      {/* Error Display */}
+    <div className="user-wallet-connection">
       {error && (
-        <div className="wallet-error">
+        <div className="user-wallet-error">
           <i className="fas fa-exclamation-triangle"></i>
           <span>{error}</span>
         </div>
       )}
 
-      {/* Main Connect Button */}
       {!showWalletOptions && (
         <button 
-          className="btn btn-primary wallet-connect-btn"
+          className="btn btn-primary user-connect-btn"
           onClick={() => setShowWalletOptions(true)}
           disabled={loading}
         >
@@ -134,20 +153,19 @@ const WalletConnection = () => {
           ) : (
             <>
               <i className="fas fa-wallet me-2"></i>
-              Connect Wallet
+              Connect Your Wallet
             </>
           )}
         </button>
       )}
 
-      {/* Wallet Options Modal */}
       {showWalletOptions && (
-        <div className="wallet-options-overlay">
-          <div className="wallet-options-modal">
-            <div className="wallet-options-header">
+        <div className="user-wallet-overlay">
+          <div className="user-wallet-modal">
+            <div className="user-wallet-header">
               <h5>
                 <i className="fas fa-wallet me-2"></i>
-                Choose Your Wallet
+                Connect Your Wallet
               </h5>
               <button 
                 className="btn-close"
@@ -157,24 +175,30 @@ const WalletConnection = () => {
               </button>
             </div>
             
-            <div className="wallet-options-list">
-              {walletOptions.map((wallet) => (
-                <div key={wallet.id} className="wallet-option">
+            <div className="user-wallet-info-box">
+              <i className="fas fa-info-circle me-2"></i>
+              <span>Choose a wallet to participate in auctions and manage your digital assets</span>
+            </div>
+
+            <div className="user-wallet-list">
+              {userWalletOptions.map((wallet) => (
+                <div key={wallet.id} className="user-wallet-option">
                   {wallet.available ? (
                     <button
-                      className="wallet-option-btn"
+                      className={`user-wallet-btn ${wallet.popular ? 'popular' : ''}`}
                       onClick={() => handleWalletConnect(wallet.id)}
                       disabled={connectingWallet === wallet.id}
                     >
-                      <div className="wallet-option-content">
-                        <div className="wallet-icon">
+                      <div className="user-wallet-content">
+                        <div className="user-wallet-icon">
                           <i className={wallet.icon}></i>
+                          {wallet.popular && <span className="popular-badge">Popular</span>}
                         </div>
-                        <div className="wallet-details">
-                          <div className="wallet-name">{wallet.name}</div>
-                          <div className="wallet-description">{wallet.description}</div>
+                        <div className="user-wallet-details">
+                          <div className="user-wallet-name">{wallet.name}</div>
+                          <div className="user-wallet-description">{wallet.description}</div>
                         </div>
-                        <div className="wallet-status">
+                        <div className="user-wallet-status">
                           {connectingWallet === wallet.id ? (
                             <span className="spinner-border spinner-border-sm"></span>
                           ) : (
@@ -184,18 +208,18 @@ const WalletConnection = () => {
                       </div>
                     </button>
                   ) : (
-                    <div className="wallet-option-unavailable">
-                      <div className="wallet-option-content">
-                        <div className="wallet-icon disabled">
+                    <div className="user-wallet-unavailable">
+                      <div className="user-wallet-content">
+                        <div className="user-wallet-icon disabled">
                           <i className={wallet.icon}></i>
                         </div>
-                        <div className="wallet-details">
-                          <div className="wallet-name">{wallet.name}</div>
-                          <div className="wallet-description">
+                        <div className="user-wallet-details">
+                          <div className="user-wallet-name">{wallet.name}</div>
+                          <div className="user-wallet-description">
                             {wallet.comingSoon ? 'Coming Soon' : 'Not Available'}
                           </div>
                         </div>
-                        <div className="wallet-status">
+                        <div className="user-wallet-status">
                           {!wallet.comingSoon && wallet.installUrl && (
                             <a 
                               href={wallet.installUrl} 
@@ -213,11 +237,11 @@ const WalletConnection = () => {
                 </div>
               ))}
             </div>
-            
-            <div className="wallet-options-footer">
-              <p className="text-muted">
-                <i className="fas fa-shield-alt me-1"></i>
-                Your wallet is secure and only you have access to your private keys.
+
+            <div className="user-wallet-footer">
+              <p className="security-note">
+                <i className="fas fa-lock me-1"></i>
+                We never store your private keys. Your wallet stays secure.
               </p>
             </div>
           </div>
@@ -227,4 +251,4 @@ const WalletConnection = () => {
   );
 };
 
-export default WalletConnection;
+export default UserWalletConnection;

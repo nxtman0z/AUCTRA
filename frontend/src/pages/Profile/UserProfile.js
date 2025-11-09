@@ -23,16 +23,6 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
-  const [kycStatus, setKycStatus] = useState('pending'); // pending, submitted, approved, rejected
-
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    // Fetch user profile data
-    fetchProfile();
-  }, [user, navigate]);
 
   const fetchProfile = async () => {
     try {
@@ -44,17 +34,26 @@ const UserProfile = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setProfile({
-          ...profile,
+        setProfile(prev => ({
+          ...prev,
           ...data.profile,
           profilePicturePreview: data.profile.profilePicture || ''
-        });
-        setKycStatus(data.kycStatus || 'pending');
+        }));
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
     }
   };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    // Fetch user profile data
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, navigate]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -176,36 +175,6 @@ const UserProfile = () => {
                 <h4>{profile.fullName || user?.username || 'User'}</h4>
                 <p className="text-muted">{profile.email}</p>
                 
-                <div className="kyc-status-card">
-                  <h6>KYC Status</h6>
-                  <span className={`badge badge-${kycStatus}`}>
-                    {kycStatus === 'approved' && <i className="fas fa-check-circle me-1"></i>}
-                    {kycStatus === 'rejected' && <i className="fas fa-times-circle me-1"></i>}
-                    {kycStatus === 'submitted' && <i className="fas fa-clock me-1"></i>}
-                    {kycStatus === 'pending' && <i className="fas fa-exclamation-circle me-1"></i>}
-                    {kycStatus.toUpperCase()}
-                  </span>
-                  {kycStatus === 'pending' && (
-                    <p className="small text-warning mt-2">
-                      <i className="fas fa-info-circle me-1"></i>
-                      Complete KYC to create auctions
-                    </p>
-                  )}
-                  {kycStatus === 'approved' && (
-                    <p className="small text-success mt-2">
-                      <i className="fas fa-check me-1"></i>
-                      You can create auctions
-                    </p>
-                  )}
-                  <button 
-                    className="btn btn-outline-primary btn-sm mt-2 w-100"
-                    onClick={() => navigate('/profile/kyc')}
-                  >
-                    <i className="fas fa-id-card me-2"></i>
-                    {kycStatus === 'pending' ? 'Complete KYC' : 'View KYC Details'}
-                  </button>
-                </div>
-
                 <button 
                   className="btn btn-gradient-admin w-100 mt-3"
                   onClick={handleApplyForAdmin}

@@ -1,0 +1,294 @@
+.admin-wallet-connection {
+  position: relative;
+}
+
+.admin-wallet-connected {
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  padding: 15px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-glow);
+  border: 2px solid rgba(180, 83, 9, 0.2);
+}
+
+.admin-wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.admin-crown {
+  color: #FBBF24;
+  font-size: 1.1rem;
+}
+
+.admin-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.admin-address:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-security {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.security-icon {
+  color: #90ee90;
+}
+
+.copy-icon {
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.admin-address:hover .copy-icon {
+  opacity: 1;
+}
+
+.admin-disconnect {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+}
+
+.admin-disconnect:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.admin-wallet-error {
+  background: #dc3545;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.admin-connect-btn {
+  background: linear-gradient(135deg, #ff6b35, #f7931e) !important;
+  border: none !important;
+  color: white !important;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.admin-connect-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.admin-wallet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-wallet-modal {
+  background: var(--bg-cards);
+  border-radius: 15px;
+  padding: 0;
+  max-width: 480px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.admin-wallet-header {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-wallet-header h5 {
+  margin: 0;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.btn-close:hover {
+  opacity: 1;
+}
+
+.admin-wallet-warning {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-wallet-list {
+  padding: 20px;
+}
+
+.admin-wallet-option {
+  margin-bottom: 15px;
+}
+
+.admin-wallet-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #34495e, #2c3e50);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.admin-wallet-btn:hover {
+  border-color: #ff6b35;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+}
+
+.admin-wallet-btn.recommended {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, #3a4a5c, #2f3f4f);
+}
+
+.admin-wallet-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.admin-wallet-icon {
+  position: relative;
+  font-size: 1.8rem;
+  color: #ff6b35;
+  min-width: 40px;
+  text-align: center;
+}
+
+.recommended-badge {
+  position: absolute;
+  top: -10px;
+  right: -5px;
+  background: #ffd700;
+  color: #2c3e50;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.admin-wallet-details {
+  flex: 1;
+  text-align: left;
+}
+
+.admin-wallet-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+
+.admin-wallet-description {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+}
+
+.admin-wallet-status {
+  color: #ff6b35;
+  font-size: 1.2rem;
+}
+
+.admin-wallet-unavailable {
+  background: rgba(108, 117, 125, 0.3);
+  border: 2px solid rgba(108, 117, 125, 0.2);
+  border-radius: 12px;
+  padding: 15px;
+  opacity: 0.6;
+}
+
+.admin-wallet-unavailable .admin-wallet-icon {
+  color: #6c757d;
+}
+
+.admin-wallet-unavailable .admin-wallet-name {
+  color: #6c757d;
+}
+
+.admin-wallet-unavailable .admin-wallet-description {
+  color: rgba(108, 117, 125, 0.8);
+}
+
+@media (max-width: 768px) {
+  .admin-wallet-connected {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .admin-wallet-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .admin-wallet-header {
+    padding: 15px;
+  }
+  
+  .admin-wallet-warning,
+  .admin-wallet-list {
+    padding: 15px;
+  }
+}
