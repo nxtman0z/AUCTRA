@@ -13,7 +13,6 @@ import Header from './components/Header/Header';
 
 // Import Pages
 import LandingPage from './pages/LandingPage';
-import LandingPageNew from './pages/LandingPage_new';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import Home from './pages/Home';
@@ -24,8 +23,7 @@ import AdminPanel from './pages/AdminPanel';
 import UserDashboard from './pages/UserDashboard/UserDashboard';
 import AdminDashboard from './pages/AdminDashboard/AdminDashboard';
 import UserProfile from './pages/Profile/UserProfile';
-import UserVerification from './pages/UserVerification/UserVerification';
-import MainDashboard from './pages/Dashboard/MainDashboard';
+import AuctionDetails from './pages/AuctionDetails/AuctionDetails';
 
 // Import Global CSS
 import './App.css';
@@ -38,29 +36,12 @@ function App() {
           <div className="App">
             <Routes>
               {/* Public Routes - No Header */}
-              <Route path="/old" element={<LandingPage />} />
-              <Route path="/" element={<LandingPageNew />} />
+              <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               
               {/* Authenticated Routes - With Header */}
               <Route path="/dashboard" element={
-                <div>
-                  <Header />
-                  <main className="main-content">
-                    <MainDashboard />
-                  </main>
-                </div>
-              } />
-              <Route path="/user-verification" element={
-                <div>
-                  <Header />
-                  <main className="main-content">
-                    <UserVerification />
-                  </main>
-                </div>
-              } />
-              <Route path="/user-dashboard" element={
                 <div>
                   <Header />
                   <main className="main-content">
@@ -81,6 +62,14 @@ function App() {
                   <Header />
                   <main className="main-content">
                     <AllAuctions />
+                  </main>
+                </div>
+              } />
+              <Route path="/auction/:auctionAddress" element={
+                <div>
+                  <Header />
+                  <main className="main-content">
+                    <AuctionDetails />
                   </main>
                 </div>
               } />

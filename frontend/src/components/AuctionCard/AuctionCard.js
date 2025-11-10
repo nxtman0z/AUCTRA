@@ -170,7 +170,7 @@ const AuctionCard = ({ auction, showActions = false, onRefresh }) => {
               </Link>
               {auction.isLive && !isExpired && (
                 <Link 
-                  to={`/auction/${auction.auctionAddress}/bid`} 
+                  to={`/auction/${auction.auctionAddress}`} 
                   className="btn btn-success btn-sm flex-fill"
                 >
                   <i className="fas fa-hand-paper me-1"></i>

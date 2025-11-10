@@ -102,11 +102,32 @@ const SignupPage = () => {
           navigate('/login');
         }, 3000);
       } else {
-        setError(result.error || 'Registration failed');
+        // Handle specific error messages
+        const errorMsg = result.error || 'Registration failed';
+        if (errorMsg.includes('wallet')) {
+          setError('This wallet is already connected to another account. Please disconnect your wallet or login instead.');
+        } else if (errorMsg.includes('Email already')) {
+          setError('This email is already registered. Please login instead or use a different email.');
+        } else if (errorMsg.includes('Username already')) {
+          setError('This username is already taken. Please choose a different username.');
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err) {
       console.error('Signup error:', err);
-      setError(err.message || 'Registration failed. Please try again.');
+      
+      // Handle specific error messages
+      const errorMsg = err.message || 'Registration failed';
+      if (errorMsg.includes('wallet') || errorMsg.includes('WalletAddress')) {
+        setError('This wallet is already connected to another account. Please disconnect your wallet from MetaMask or login instead.');
+      } else if (errorMsg.includes('Email already') || errorMsg.includes('email')) {
+        setError('This email is already registered. Please login instead.');
+      } else if (errorMsg.includes('Username already') || errorMsg.includes('username')) {
+        setError('This username is already taken. Please choose another.');
+      } else {
+        setError('Registration failed. Please try again or contact support.');
+      }
     } finally {
       setLoading(false);
     }
@@ -241,6 +262,12 @@ const SignupPage = () => {
                     I agree to the <a href="#" className="terms-link">Terms of Service</a> and <a href="#" className="terms-link">Privacy Policy</a>
                   </label>
                 </div>
+              </div>
+
+              {/* Info Note */}
+              <div className="alert alert-info">
+                <i className="fas fa-info-circle me-2"></i>
+                <strong>Note:</strong> You can connect your MetaMask wallet later from your profile to participate in auctions.
               </div>
 
               <button 

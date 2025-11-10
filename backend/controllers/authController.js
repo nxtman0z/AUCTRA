@@ -83,21 +83,34 @@ exports.signup = async (req, res) => {
     const existingUser = await User.findOne({
       $or: [
         { email: email.toLowerCase() },
-        { username },
-        ...(walletAddress ? [{ walletAddress }] : [])
+        { username }
       ]
     });
 
     if (existingUser) {
       let message = 'User already exists';
-      if (existingUser.email === email.toLowerCase()) message = 'Email already registered';
-      if (existingUser.username === username) message = 'Username already taken';
-      if (walletAddress && existingUser.walletAddress === walletAddress) message = 'Wallet address already registered';
+      if (existingUser.email === email.toLowerCase()) {
+        message = 'Email already registered. Please login instead.';
+      }
+      if (existingUser.username === username) {
+        message = 'Username already taken. Please choose another.';
+      }
       
       return res.status(409).json({
         success: false,
         message
       });
+    }
+
+    // If wallet address is provided, check if it's already in use
+    if (walletAddress) {
+      const walletExists = await User.findOne({ walletAddress });
+      if (walletExists) {
+        return res.status(409).json({
+          success: false,
+          message: 'This wallet is already connected to another account. Please login or use a different wallet.'
+        });
+      }
     }
 
     // Create new user
@@ -107,8 +120,8 @@ exports.signup = async (req, res) => {
       password
     };
     
-    // Add wallet address only if provided
-    if (walletAddress) {
+    // Add wallet address only if provided and not empty
+    if (walletAddress && walletAddress.trim()) {
       userData.walletAddress = walletAddress;
     }
     

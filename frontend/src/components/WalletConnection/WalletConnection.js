@@ -1,228 +1,147 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWeb3 } from '../../context/Web3Context';
 import './WalletConnection.css';
 
 const WalletConnection = () => {
-  const { 
-    account, 
-    isConnected, 
-    connectWallet, 
-    disconnectWallet, 
-    loading, 
-    error 
-  } = useWeb3();
-  
-  const [showWalletOptions, setShowWalletOptions] = useState(false);
-  const [connectingWallet, setConnectingWallet] = useState(null);
+  const { connectWallet, disconnectWallet, account, isConnected, loading, error } = useWeb3();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
 
-  const walletOptions = [
-    {
-      id: 'metamask',
-      name: 'MetaMask',
-      icon: 'fab fa-ethereum',
-      description: 'Connect using MetaMask wallet',
-      available: window.ethereum && window.ethereum.isMetaMask,
-      installUrl: 'https://metamask.io/download.html'
-    },
-    {
-      id: 'walletconnect',
-      name: 'WalletConnect',
-      icon: 'fas fa-qrcode',
-      description: 'Scan QR code with wallet app',
-      available: false, // Will implement later
-      comingSoon: true
-    },
-    {
-      id: 'coinbase',
-      name: 'Coinbase Wallet',
-      icon: 'fab fa-bitcoin',
-      description: 'Connect using Coinbase Wallet',
-      available: false, // Will implement later
-      comingSoon: true
-    },
-    {
-      id: 'trustwallet',
-      name: 'Trust Wallet',
-      icon: 'fas fa-shield-alt',
-      description: 'Connect using Trust Wallet',
-      available: false, // Will implement later
-      comingSoon: true
+  // Clear error when component unmounts or connection changes
+  useEffect(() => {
+    if (isConnected) {
+      setConnectionError('');
     }
-  ];
+  }, [isConnected]);
 
-  const handleWalletConnect = async (walletType) => {
+  const handleConnect = async () => {
     try {
-      setConnectingWallet(walletType);
-      const result = await connectWallet(walletType);
-      
-      if (result) {
-        setShowWalletOptions(false);
-        console.log('🎉 Wallet connected successfully!');
-      }
+      setConnectionError('');
+      await connectWallet();
     } catch (err) {
-      console.error('Connection failed:', err);
-    } finally {
-      setConnectingWallet(null);
+      console.error('Wallet connection failed:', err);
+      setConnectionError(err.message);
+      
+      // Auto-clear error after 5 seconds
+      setTimeout(() => {
+        setConnectionError('');
+      }, 5000);
     }
   };
 
-  const copyAddress = () => {
-    if (account) {
-      navigator.clipboard.writeText(account);
-      // You can add a toast notification here
+  const handleDisconnect = async () => {
+    try {
+      await disconnectWallet();
+      setShowDropdown(false);
+      setConnectionError('');
+    } catch (err) {
+      console.error('Wallet disconnect failed:', err);
     }
   };
 
-  const formatAddress = (address) => {
+  const truncateAddress = (address) => {
     if (!address) return '';
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
-  // If connected, show connected state
-  if (isConnected && account) {
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  // Check if MetaMask is installed
+  const isMetaMaskInstalled = () => {
+    return typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask;
+  };
+
+  if (loading) {
     return (
-      <div className="wallet-connected">
-        <div className="wallet-info">
-          <div className="wallet-status">
-            <i className="fas fa-circle connected-dot"></i>
-            <span>Connected</span>
-          </div>
-          <div className="wallet-address" onClick={copyAddress} title="Click to copy">
-            <i className="fas fa-wallet"></i>
-            <span>{formatAddress(account)}</span>
-            <i className="fas fa-copy copy-icon"></i>
-          </div>
-        </div>
-        <button 
-          className="btn btn-outline-danger btn-sm"
-          onClick={disconnectWallet}
-          disabled={loading}
-        >
-          {loading ? (
-            <span className="spinner-border spinner-border-sm"></span>
-          ) : (
-            <i className="fas fa-sign-out-alt"></i>
-          )}
+      <div className="wallet-connection">
+        <button className="wallet-btn connecting" disabled>
+          <i className="fas fa-spinner fa-spin me-2"></i>
+          Connecting...
         </button>
       </div>
     );
   }
 
-  // If not connected, show connection options
-  return (
-    <div className="wallet-connection">
-      {/* Error Display */}
-      {error && (
-        <div className="wallet-error">
-          <i className="fas fa-exclamation-triangle"></i>
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Main Connect Button */}
-      {!showWalletOptions && (
-        <button 
-          className="btn btn-primary wallet-connect-btn"
-          onClick={() => setShowWalletOptions(true)}
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2"></span>
-              Connecting...
-            </>
-          ) : (
-            <>
-              <i className="fas fa-wallet me-2"></i>
-              Connect Wallet
-            </>
-          )}
-        </button>
-      )}
-
-      {/* Wallet Options Modal */}
-      {showWalletOptions && (
-        <div className="wallet-options-overlay">
-          <div className="wallet-options-modal">
-            <div className="wallet-options-header">
-              <h5>
-                <i className="fas fa-wallet me-2"></i>
-                Choose Your Wallet
-              </h5>
-              <button 
-                className="btn-close"
-                onClick={() => setShowWalletOptions(false)}
+  if (!isConnected) {
+    return (
+      <div className="wallet-connection">
+        {!isMetaMaskInstalled() ? (
+          <div className="wallet-error">
+            <button className="wallet-btn error" disabled>
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              MetaMask Required
+            </button>
+            <div className="error-tooltip">
+              <a 
+                href="https://metamask.io/download/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="install-link"
               >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            
-            <div className="wallet-options-list">
-              {walletOptions.map((wallet) => (
-                <div key={wallet.id} className="wallet-option">
-                  {wallet.available ? (
-                    <button
-                      className="wallet-option-btn"
-                      onClick={() => handleWalletConnect(wallet.id)}
-                      disabled={connectingWallet === wallet.id}
-                    >
-                      <div className="wallet-option-content">
-                        <div className="wallet-icon">
-                          <i className={wallet.icon}></i>
-                        </div>
-                        <div className="wallet-details">
-                          <div className="wallet-name">{wallet.name}</div>
-                          <div className="wallet-description">{wallet.description}</div>
-                        </div>
-                        <div className="wallet-status">
-                          {connectingWallet === wallet.id ? (
-                            <span className="spinner-border spinner-border-sm"></span>
-                          ) : (
-                            <i className="fas fa-arrow-right"></i>
-                          )}
-                        </div>
-                      </div>
-                    </button>
-                  ) : (
-                    <div className="wallet-option-unavailable">
-                      <div className="wallet-option-content">
-                        <div className="wallet-icon disabled">
-                          <i className={wallet.icon}></i>
-                        </div>
-                        <div className="wallet-details">
-                          <div className="wallet-name">{wallet.name}</div>
-                          <div className="wallet-description">
-                            {wallet.comingSoon ? 'Coming Soon' : 'Not Available'}
-                          </div>
-                        </div>
-                        <div className="wallet-status">
-                          {!wallet.comingSoon && wallet.installUrl && (
-                            <a 
-                              href={wallet.installUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="install-link"
-                            >
-                              Install
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            
-            <div className="wallet-options-footer">
-              <p className="text-muted">
-                <i className="fas fa-shield-alt me-1"></i>
-                Your wallet is secure and only you have access to your private keys.
-              </p>
+                Install MetaMask
+              </a>
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="wallet-connect-container">
+            <button className="wallet-btn connect" onClick={handleConnect}>
+              <i className="fas fa-wallet me-2"></i>
+              Connect Wallet
+            </button>
+            {(connectionError || error) && (
+              <div className="wallet-error-message">
+                <i className="fas fa-exclamation-circle me-1"></i>
+                {connectionError || error}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="wallet-connection">
+      <div className="wallet-dropdown">
+        <button 
+          className="wallet-btn connected"
+          onClick={() => setShowDropdown(!showDropdown)}
+        >
+          <i className="fas fa-wallet me-2"></i>
+          {truncateAddress(account)}
+          <i className={`fas fa-chevron-${showDropdown ? 'up' : 'down'} ms-2`}></i>
+        </button>
+        
+        {showDropdown && (
+          <div className="wallet-dropdown-menu">
+            <div className="wallet-info">
+              <div className="wallet-address">
+                <i className="fas fa-copy me-2"></i>
+                <span title={account}>{account}</span>
+                <button 
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(account)}
+                  title="Copy address"
+                >
+                  <i className="fas fa-copy"></i>
+                </button>
+              </div>
+            </div>
+            <hr />
+            <button className="disconnect-btn" onClick={handleDisconnect}>
+              <i className="fas fa-sign-out-alt me-2"></i>
+              Disconnect
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,29 +1,28 @@
 /* Global App Styles */
-@import url('./styles/colors.css');
 
 * {
   box-sizing: border-box;
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: var(--bg-main);
-  color: var(--text-primary);
+  background-color: #f7fafc;
+  color: #2d3748;
   line-height: 1.6;
 }
 
 /* Global Navbar Styling */
 .navbar {
-  background: var(--bg-cards) !important;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%) !important;
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border-subtle);
-  box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-brand {
-  color: var(--text-headings) !important;
+  color: #f7fafc !important;
   font-weight: 700;
 }
 
@@ -35,13 +34,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-main);
 }
 
 .main-content {
   flex: 1;
   width: 100%;
-  background: var(--bg-main);
 }
 
 /* Custom scrollbar */
@@ -50,16 +47,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-light);
+  background: #f1f1f1;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--accent-primary);
+  background: #007bff;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-hover);
+  background: #0056b3;
 }
 
 /* Global button styles */

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import WalletConnection from '../WalletConnection';
 import './Header.css';
 
 const Header = () => {
@@ -13,18 +14,18 @@ const Header = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg" style={{ background: 'var(--bg-cards)', borderBottom: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-sm)' }}>
+    <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div className="container">
         <Link className="navbar-brand fw-bold d-flex align-items-center" to="/dashboard">
           <img 
             src="/auctra_logo.png" 
-            alt="AUCTRA Logo" 
+            alt="Auctra" 
             height="40" 
             className="me-2"
-            style={{objectFit: 'contain'}}
+            onError={(e) => {e.target.style.display='none'}}
           />
-          <span style={{ color: 'var(--text-headings)', fontSize: '1.5rem', fontWeight: '700' }}>
-            AUCTRA
+          <span style={{ fontSize: '1.5rem', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Auctra
           </span>
         </Link>
         
@@ -109,6 +110,9 @@ const Header = () => {
           <div className="d-flex align-items-center gap-3">
             {user ? (
               <>
+                {/* Wallet Connection Component */}
+                <WalletConnection />
+                
                 {/* Admin Profile Dropdown */}
                 {isAdmin() && (
                   <div className="dropdown">

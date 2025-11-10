@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from 'react';
 import { useWeb3 } from '../context/Web3Context';
 import './CreateAuction.css';
 
@@ -11,11 +9,6 @@ const CreateAuction = () => {
     createAuction,
     loading
   } = useWeb3();
-  
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const [verificationStatus, setVerificationStatus] = useState(null);
-  const [checkingVerification, setCheckingVerification] = useState(true);
 
   const [formData, setFormData] = useState({
     productName: '',
@@ -28,43 +21,6 @@ const CreateAuction = () => {
   const [createLoading, setCreateLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  // Check verification status on component mount
-  useEffect(() => {
-    const checkVerificationStatus = async () => {
-      try {
-        const response = await fetch('/api/users/profile', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-
-        const data = await response.json();
-        
-        if (response.ok && data.data.user) {
-          const userData = data.data.user;
-          
-          // Check if user has verification request and its status
-          if (userData.verificationRequest) {
-            setVerificationStatus(userData.verificationRequest.status);
-          } else if (userData.isVerifiedForAuctions) {
-            setVerificationStatus('approved');
-          } else {
-            setVerificationStatus(null);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking verification status:', error);
-        setVerificationStatus(null);
-      } finally {
-        setCheckingVerification(false);
-      }
-    };
-
-    if (user) {
-      checkVerificationStatus();
-    }
-  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -121,128 +77,6 @@ const CreateAuction = () => {
       setCreateLoading(false);
     }
   };
-
-  if (checkingVerification) {
-    return (
-      <div className="create-auction-page">
-        <div className="container mt-5">
-          <div className="row justify-content-center">
-            <div className="col-md-6 text-center">
-              <div className="spinner-border text-primary mb-3" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-              <h5>Checking verification status...</h5>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if user needs to get verified
-  if (!verificationStatus || verificationStatus === 'rejected') {
-    return (
-      <div className="create-auction-page">
-        <div className="container mt-5">
-          <div className="row justify-content-center">
-            <div className="col-md-8">
-              <div className="verification-required-card">
-                <div className="text-center">
-                  <i className="fas fa-user-check fa-4x text-warning mb-4"></i>
-                  <h2>Verification Required</h2>
-                  <p className="text-muted mb-4">
-                    To create auctions on AUCTRA, you need to complete our verification process.
-                    This helps us ensure the security and authenticity of all auction creators.
-                  </p>
-                  
-                  <div className="verification-info mb-4">
-                    <h5>What you'll need:</h5>
-                    <ul className="list-unstyled">
-                      <li><i className="fas fa-id-card text-primary me-2"></i>Valid Aadhaar Card</li>
-                      <li><i className="fas fa-credit-card text-primary me-2"></i>Valid PAN Card</li>
-                      <li><i className="fas fa-camera text-primary me-2"></i>Recent Photo</li>
-                      <li><i className="fas fa-home text-primary me-2"></i>Address Information</li>
-                    </ul>
-                  </div>
-
-                  {verificationStatus === 'rejected' && (
-                    <div className="alert alert-warning">
-                      <i className="fas fa-exclamation-triangle me-2"></i>
-                      Your previous verification request was rejected. Please submit a new request with correct information.
-                    </div>
-                  )}
-
-                  <button
-                    className="btn btn-primary btn-lg"
-                    onClick={() => navigate('/user-verification')}
-                  >
-                    <i className="fas fa-arrow-right me-2"></i>
-                    Start Verification Process
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Check if verification is pending
-  if (verificationStatus === 'pending') {
-    return (
-      <div className="create-auction-page">
-        <div className="container mt-5">
-          <div className="row justify-content-center">
-            <div className="col-md-8">
-              <div className="verification-pending-card">
-                <div className="text-center">
-                  <i className="fas fa-clock fa-4x text-info mb-4"></i>
-                  <h2>Verification Under Review</h2>
-                  <p className="text-muted mb-4">
-                    Your verification request is currently being reviewed by our admin team.
-                    You'll receive an email notification once the review is complete.
-                  </p>
-                  
-                  <div className="status-timeline mb-4">
-                    <div className="timeline-step completed">
-                      <i className="fas fa-check"></i>
-                      <span>Application Submitted</span>
-                    </div>
-                    <div className="timeline-step active">
-                      <i className="fas fa-clock"></i>
-                      <span>Under Review</span>
-                    </div>
-                    <div className="timeline-step">
-                      <i className="fas fa-user-check"></i>
-                      <span>Approved</span>
-                    </div>
-                  </div>
-
-                  <div className="d-flex gap-3 justify-content-center">
-                    <button
-                      className="btn btn-outline-primary"
-                      onClick={() => navigate('/dashboard')}
-                    >
-                      <i className="fas fa-arrow-left me-2"></i>
-                      Back to Dashboard
-                    </button>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => window.location.reload()}
-                    >
-                      <i className="fas fa-refresh me-2"></i>
-                      Check Status
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (!isConnected) {
     return (
